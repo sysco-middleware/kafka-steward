@@ -4,10 +4,11 @@ import java.time.Duration
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ ImplicitSender, TestKit }
 import no.sysco.middleware.kafka.event.proto.collector.TopicDescription.TopicPartitionInfo
 import no.sysco.middleware.kafka.event.proto.collector._
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import no.sysco.middleware.kafka.event.proto
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.concurrent.ExecutionContext
 
@@ -51,7 +52,7 @@ class TopicManagerSpec
               Some(
                 TopicDescription(
                   internal = false,
-                  List(TopicPartitionInfo(0, None)))))))
+                  List(TopicPartitionInfo(0, Some(proto.collector.Node(0, "localhost", 9092, "1")))))))))
 
       manager ! ListTopics()
       val topicsV1 = expectMsgType[Topics]

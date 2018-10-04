@@ -1,6 +1,7 @@
 package no.sysco.middleware.kafka.event.collector.topic.internal
 
 import java.util.Properties
+import java.util.concurrent.TimeUnit
 
 import akka.actor.{ Actor, ActorRef, Props }
 import org.apache.kafka.clients.admin.{ AdminClient, AdminClientConfig }
@@ -45,4 +46,6 @@ class TopicRepository(adminClient: AdminClient) extends Actor {
     case CollectTopics()               => handleCollectTopics()
     case describeTopics: DescribeTopic => handleDescribeTopic(describeTopics)
   }
+
+  override def postStop(): Unit = adminClient.close(1, TimeUnit.SECONDS)
 }
