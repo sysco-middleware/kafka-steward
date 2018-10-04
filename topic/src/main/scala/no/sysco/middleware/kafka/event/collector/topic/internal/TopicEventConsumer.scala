@@ -11,11 +11,11 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ ByteArrayDeserializer, StringDeserializer }
 
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, ExecutionContextExecutor, Future }
+import scala.concurrent.{ ExecutionContext, Future }
 
 object TopicEventConsumer {
 
-  def props(topicManager: ActorRef, bootstrapServers: String, topicEventTopic: String)(implicit materializer: ActorMaterializer, executionContext: ExecutionContext): Props =
+  def props(topicManager: ActorRef, bootstrapServers: String, topicEventTopic: String)(implicit actorMaterializer: ActorMaterializer, executionContext: ExecutionContext): Props =
     Props(new TopicEventConsumer(topicManager, bootstrapServers, topicEventTopic))
 }
 

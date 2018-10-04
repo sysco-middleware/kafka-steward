@@ -2,13 +2,11 @@
 import scalariform.formatter.preferences._
 import Dependencies._
 
-val projectV = "0.1.0-SNAPSHOT"
-val scalaV = "2.12.6"
-
 // https://www.scala-sbt.org/release/docs/Basic-Def-Examples.html
 lazy val settings = Seq(
-  scalaVersion := scalaV,
-
+  scalaVersion := "2.12.7",
+  version := "0.1.0-SNAPSHOT",
+  
   test in assembly := {},
 
   // set the main Scala source directory to be <base>/src
