@@ -36,3 +36,7 @@ scalariformPreferences := scalariformPreferences.value
   .setPreference(AlignSingleLineCaseStatements, true)
   .setPreference(DoubleIndentConstructorArguments, true)
   .setPreference(DanglingCloseParenthesis, Preserve)
+
+
+// Add the default sonatype repository setting
+publishTo := sonatypePublishTo.value
