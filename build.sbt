@@ -10,7 +10,7 @@ lazy val root = project
   .in(file("."))
   .settings(
     name := "kafka-event-collector",
-    organization := "no.sysco.middleware.kafka",
+    organization := "no.sysco.middleware.kafka.event",
   )
 
 libraryDependencies ++= Seq(
