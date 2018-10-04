@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package kafka.event.collector.proto;
+
+option java_package = "no.sysco.middleware.kafka.event.proto";
+option java_multiple_files = true;
+
+message ClusterEvent {
+  string id = 1;
+  oneof event {
+    ClusterCreated clusterCreated = 2;
+  }
+}
+
+message ClusterCreated {
+  Node controller = 1;
+}
+
+message ClusterUpdated {
+  Node controller = 1;
+}
+
+message NodeEvent {
+  int32 id = 1;
+  oneof event {
+    NodeCreated nodeCreated = 2;
+    NodeUpdated nodeUpdated = 3;
+  }
+}
+
+message NodeCreated {
+  Node node = 1;
+}
+
+message NodeUpdated {
+  Node node = 1;
+}
+
+message TopicEvent {
+  string name = 1;
+  oneof event {
+    TopicCreated topicCreated = 2;
+    TopicUpdated topicUpdated = 3;
+    TopicDeleted topicDeleted = 4;
+  }
+}
+
+message TopicCreated {
+}
+
+message TopicUpdated {
+  TopicDescription topicDescription = 1;
+}
+
+message TopicDescription {
+  message TopicPartitionInfo {
+    int32 partition = 1;
+    Node leader = 2;
+    repeated Node replicas = 3;
+    repeated Node isr = 4;
+  }
+
+  bool internal = 1;
+  repeated TopicPartitionInfo topicPartitions = 2;
+}
+
+message TopicDeleted {
+}
+
+message Node {
+  int32 id = 1;
+  string host = 2;
+  int32 port = 3;
+  string rack = 4;
+}
+
+
