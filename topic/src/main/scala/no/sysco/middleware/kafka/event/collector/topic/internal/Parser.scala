@@ -1,4 +1,4 @@
-package no.sysco.middleware.kafka.metadata.collector.topic.internal
+package no.sysco.middleware.kafka.event.collector.topic.internal
 
 import no.sysco.middleware.kafka.metadata.collector.proto.topic.TopicDescriptionPb.TopicPartitionInfoPb
 import no.sysco.middleware.kafka.metadata.collector.proto.topic.{ NodePb, TopicDescriptionPb, TopicUpdatedPb }

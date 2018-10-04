@@ -1,9 +1,8 @@
-package no.sysco.middleware.kafka.metadata.collector.topic
+package no.sysco.middleware.kafka.event.collector.topic
 
-import akka.actor.{ ActorRef, ActorSystem }
+import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.ActorMaterializer
-import com.typesafe.config.{ Config, ConfigFactory }
-import no.sysco.middleware.kafka.metadata.collector.topic.internal._
+import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.concurrent.ExecutionContext
 

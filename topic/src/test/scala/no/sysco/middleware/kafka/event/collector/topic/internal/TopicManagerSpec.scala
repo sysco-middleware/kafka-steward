@@ -1,4 +1,4 @@
-package no.sysco.middleware.kafka.metadata.collector.topic.internal
+package no.sysco.middleware.kafka.event.collector.topic.internal
 
 import java.time.Duration
 
