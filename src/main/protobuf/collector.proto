@@ -9,6 +9,7 @@ message ClusterEvent {
   string id = 1;
   oneof event {
     ClusterCreated clusterCreated = 2;
+    ClusterUpdated clusterUpdated = 3;
   }
 }
 

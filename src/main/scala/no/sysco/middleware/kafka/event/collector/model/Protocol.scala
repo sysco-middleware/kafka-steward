@@ -1,10 +1,18 @@
-package no.sysco.middleware.kafka.event.collector.topic.internal
-
-sealed trait State
+package no.sysco.middleware.kafka.event.collector.model
 
 sealed trait Event
 
 sealed trait Command
+
+sealed trait State
+
+case class DescribeCluster() extends Command
+
+case class Cluster(id: String, controller: Option[Node]) extends State
+
+case class ClusterDescribed(id: String, controller: Option[Node], nodes: List[Node]) extends Event
+
+case class NodesDescribed(nodes: List[Node]) extends Event
 
 case class CollectTopics() extends Command
 

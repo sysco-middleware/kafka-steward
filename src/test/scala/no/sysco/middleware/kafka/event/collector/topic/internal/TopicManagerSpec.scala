@@ -5,6 +5,7 @@ import java.time.Duration
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.{ ImplicitSender, TestKit }
+import no.sysco.middleware.kafka.event.collector.model._
 import no.sysco.middleware.kafka.event.proto.collector.TopicDescription.TopicPartitionInfo
 import no.sysco.middleware.kafka.event.proto.collector._
 import no.sysco.middleware.kafka.event.proto

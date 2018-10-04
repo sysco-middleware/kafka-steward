@@ -1,5 +1,6 @@
 package no.sysco.middleware.kafka.event.collector.topic.internal
 
+import no.sysco.middleware.kafka.event.collector.model.Parser
 import org.apache.kafka.clients.admin.TopicDescription
 import org.apache.kafka.common
 import org.apache.kafka.common.TopicPartitionInfo

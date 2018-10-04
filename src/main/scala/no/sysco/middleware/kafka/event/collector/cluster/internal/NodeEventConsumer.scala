@@ -1,12 +1,12 @@
-package no.sysco.middleware.kafka.event.collector.topic.internal
+package no.sysco.middleware.kafka.event.collector.cluster.internal
 
-import akka.actor.{ Actor, ActorRef, Props }
+import akka.actor.{ Actor, ActorRef }
 import akka.kafka.scaladsl.Consumer
 import akka.kafka.{ ConsumerSettings, Subscriptions }
 import akka.stream.scaladsl.{ Keep, Sink }
 import akka.stream.{ ActorMaterializer, KillSwitches, UniqueKillSwitch }
 import com.typesafe.config.Config
-import no.sysco.middleware.kafka.event.proto.collector.TopicEvent
+import no.sysco.middleware.kafka.event.proto.collector.NodeEvent
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ ByteArrayDeserializer, StringDeserializer }
 
@@ -14,18 +14,12 @@ import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
 
-object TopicEventConsumer {
-
-  def props(topicManager: ActorRef, bootstrapServers: String, topicEventTopic: String)(implicit actorMaterializer: ActorMaterializer, executionContext: ExecutionContext): Props =
-    Props(new TopicEventConsumer(topicManager, bootstrapServers, topicEventTopic))
-}
-
 /**
- * Consume Topic events.
+ * Consume Cluster Nodes events.
  *
- * @param topicManager Reference to Topic Manager, to consume events further.
+ * @param nodeManager Reference to Node Manager, to consume events further.
  */
-class TopicEventConsumer(topicManager: ActorRef, bootstrapServers: String, topicEventTopic: String)(implicit materializer: ActorMaterializer, executionContext: ExecutionContext)
+class NodeEventConsumer(nodeManager: ActorRef, bootstrapServers: String, clusterEventTopic: String)(implicit materializer: ActorMaterializer, executionContext: ExecutionContext)
   extends Actor {
 
   val config: Config = context.system.settings.config.getConfig("akka.kafka.consumer")
@@ -38,10 +32,10 @@ class TopicEventConsumer(topicManager: ActorRef, bootstrapServers: String, topic
       .withGroupId("_kafka-event-collector-internal-consumer")
 
   val killSwitch: UniqueKillSwitch =
-    Consumer.plainSource(consumerSettings, Subscriptions.topics(topicEventTopic))
-      .map(record => TopicEvent.parseFrom(record.value()))
-      .mapAsync(1)(topicEvent => Future {
-        topicManager ! topicEvent
+    Consumer.plainSource(consumerSettings, Subscriptions.topics(clusterEventTopic))
+      .map(record => NodeEvent.parseFrom(record.value()))
+      .mapAsync(1)(nodeEvent => Future {
+        nodeManager ! nodeEvent
       })
       .viaMat(KillSwitches.single)(Keep.right)
       .to(Sink.ignore)

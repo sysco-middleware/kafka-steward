@@ -7,6 +7,7 @@ import akka.testkit.{ImplicitSender, TestKit}
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig, NewTopic}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import no.sysco.middleware.kafka.event.collector.model._
 
 import scala.collection.JavaConverters._
 

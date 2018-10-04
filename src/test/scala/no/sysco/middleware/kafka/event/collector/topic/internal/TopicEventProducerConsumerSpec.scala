@@ -36,7 +36,7 @@ class TopicEventProducerConsumerSpec
 
         system.actorOf(TopicEventConsumer.props(probe.ref, bootstrapServers, topicEventTopic))
 
-        val eventProducer = system.actorOf(TopicEventProducer.props(bootstrapServers, topicEventTopic))
+        val eventProducer = system.actorOf(ClusterEventProducer.props(bootstrapServers, topicEventTopic))
 
         val topicEvent = TopicEvent("test", TopicEvent.Event.TopicCreated(TopicCreated()))
         eventProducer ! topicEvent

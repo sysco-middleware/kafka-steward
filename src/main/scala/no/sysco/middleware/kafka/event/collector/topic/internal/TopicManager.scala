@@ -4,6 +4,7 @@ import java.time.Duration
 
 import akka.actor.{ Actor, ActorRef, Props }
 import akka.stream.ActorMaterializer
+import no.sysco.middleware.kafka.event.collector.model._
 import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent }
 
 import scala.concurrent.ExecutionContext
@@ -23,7 +24,7 @@ object TopicManager {
 class TopicManager(pollInterval: Duration, bootstrapServers: String, topicEventTopic: String)(implicit actorMaterializer: ActorMaterializer, val executionContext: ExecutionContext)
   extends Actor {
 
-  val topicEventProducer: ActorRef = context.actorOf(TopicEventProducer.props(bootstrapServers, topicEventTopic))
+  val topicEventProducer: ActorRef = context.actorOf(ClusterEventProducer.props(bootstrapServers, topicEventTopic))
   val topicRepository: ActorRef = context.actorOf(TopicRepository.props(bootstrapServers))
   val topicEventConsumer: ActorRef = context.actorOf(TopicEventConsumer.props(self, bootstrapServers, topicEventTopic))
   var topicsAndDescription: Map[String, Option[Description]] = Map()
@@ -98,10 +99,10 @@ class TopicManager(pollInterval: Duration, bootstrapServers: String, topicEventT
     context.system.scheduler.scheduleOnce(pollInterval, () => self ! CollectTopics())
   }
 
-  override def preStart(): Unit = self ! CollectTopics()
-
   def handleListTopics(): Unit =
     sender() ! Topics(topicsAndDescription)
+
+  override def preStart(): Unit = self ! CollectTopics()
 
   override def receive: Receive = {
     case topicsCollected: TopicsCollected => handleTopicsCollected(topicsCollected)
@@ -111,4 +112,5 @@ class TopicManager(pollInterval: Duration, bootstrapServers: String, topicEventT
     case ListTopics()                     => handleListTopics()
   }
 
+  override def postStop(): Unit = super.postStop()
 }

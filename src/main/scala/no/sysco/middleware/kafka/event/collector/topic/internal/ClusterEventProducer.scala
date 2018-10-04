@@ -7,7 +7,7 @@ import no.sysco.middleware.kafka.event.proto.collector.TopicEvent
 import org.apache.kafka.clients.producer.{ KafkaProducer, Producer, ProducerConfig, ProducerRecord }
 import org.apache.kafka.common.serialization.{ ByteArraySerializer, StringSerializer }
 
-object TopicEventProducer {
+object ClusterEventProducer {
 
   def props(bootstrapServers: String, topicEventTopic: String): Props = {
     val producerConfigs = new Properties()
@@ -15,17 +15,17 @@ object TopicEventProducer {
     producerConfigs.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, new StringSerializer().getClass.getName)
     producerConfigs.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, new ByteArraySerializer().getClass.getName)
     val producer: Producer[String, Array[Byte]] = new KafkaProducer(producerConfigs)
-    Props(new TopicEventProducer(topicEventTopic, producer))
+    Props(new ClusterEventProducer(topicEventTopic, producer))
   }
 
   def props(topicEventTopic: String, producer: Producer[String, Array[Byte]]) =
-    Props(new TopicEventProducer(topicEventTopic, producer))
+    Props(new ClusterEventProducer(topicEventTopic, producer))
 }
 
 /**
  * Publish Topic events.
  */
-class TopicEventProducer(topicEventTopic: String, producer: Producer[String, Array[Byte]]) extends Actor {
+class ClusterEventProducer(topicEventTopic: String, producer: Producer[String, Array[Byte]]) extends Actor {
 
   def handleTopicEvent(topicEvent: TopicEvent): Unit = {
     val byteArray = topicEvent.toByteArray

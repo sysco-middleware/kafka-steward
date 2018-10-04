@@ -1,6 +1,7 @@
-package no.sysco.middleware.kafka.event.collector.topic.internal
+package no.sysco.middleware.kafka.event.collector.model
 
 import no.sysco.middleware.kafka.event.proto
+import no.sysco.middleware.kafka.event.proto.collector.ClusterUpdated
 import org.apache.kafka.clients.admin
 import org.apache.kafka.common
 
@@ -52,4 +53,5 @@ object Parser {
               tpi.isr.map(node => toPb(node)))))))
 
   def toPb(node: Node): proto.collector.Node = proto.collector.Node(node.id, node.host, node.port, Option(node.rack).getOrElse(""))
+
 }

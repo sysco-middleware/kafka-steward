@@ -8,17 +8,16 @@ import no.sysco.middleware.kafka.event.collector.topic.internal.TopicManager
 import scala.concurrent.ExecutionContext
 
 object TopicEventCollector extends App {
-  implicit val system: ActorSystem = ActorSystem("kafka-metadata-collector-topic")
+  implicit val actorSystem: ActorSystem = ActorSystem("kafka-metadata-collector-topic")
   implicit val actorMaterializer: ActorMaterializer = ActorMaterializer()
+  implicit val executionContext: ExecutionContext = actorSystem.dispatcher
   new TopicEventCollector()
 }
 
 /**
  * Collect Topic events by observing changes a Kafka Cluster.
  */
-class TopicEventCollector(implicit actorSystem: ActorSystem, actorMaterializer: ActorMaterializer) {
-
-  implicit val executionContext: ExecutionContext = actorSystem.dispatcher
+class TopicEventCollector(implicit actorSystem: ActorSystem, actorMaterializer: ActorMaterializer, executionContext: ExecutionContext) {
 
   val config: Config = ConfigFactory.load()
   val appConfig: TopicEventCollectorConfig = new TopicEventCollectorConfig(config)

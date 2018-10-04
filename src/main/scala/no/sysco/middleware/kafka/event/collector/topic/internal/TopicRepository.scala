@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{ Actor, ActorRef, Props }
 import org.apache.kafka.clients.admin.{ AdminClient, AdminClientConfig }
+import no.sysco.middleware.kafka.event.collector.model._
 
 import scala.collection.JavaConverters._
 
