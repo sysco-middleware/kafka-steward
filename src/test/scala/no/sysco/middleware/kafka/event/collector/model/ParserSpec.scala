@@ -1,11 +1,10 @@
-package no.sysco.middleware.kafka.event.collector.topic.internal
+package no.sysco.middleware.kafka.event.collector.model
 
-import no.sysco.middleware.kafka.event.collector.model.Parser
+import no.sysco.middleware.kafka.event.proto
 import org.apache.kafka.clients.admin.TopicDescription
 import org.apache.kafka.common
 import org.apache.kafka.common.TopicPartitionInfo
 import org.scalatest.FlatSpec
-import no.sysco.middleware.kafka.event.proto
 
 import scala.collection.JavaConverters._
 

@@ -1,18 +1,18 @@
-package no.sysco.middleware.kafka.event.collector.topic.internal
+package no.sysco.middleware.kafka.event.collector.internal
 
 import java.util.Properties
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
+import no.sysco.middleware.kafka.event.collector.model._
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig, NewTopic}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-import no.sysco.middleware.kafka.event.collector.model._
 
 import scala.collection.JavaConverters._
 
-class TopicRepositorySpec
-  extends TestKit(ActorSystem("test-topic-repository"))
+class EventRepositorySpec
+  extends TestKit(ActorSystem("test-event-repository"))
     with ImplicitSender
     with WordSpecLike
     with Matchers
@@ -26,7 +26,7 @@ class TopicRepositorySpec
   val kafkaConfig: EmbeddedKafkaConfig = EmbeddedKafkaConfig(kafkaPort = 0, zooKeeperPort = 0)
 
 
-  "Topic Repository" must {
+  "Event Repository" must {
     "send back topic and description" in {
       withRunningKafkaOnFoundPort(kafkaConfig) { implicit actualConfig =>
         val adminConfigs = new Properties()
@@ -41,7 +41,7 @@ class TopicRepositorySpec
               new NewTopic("test-3", 1, 1),
             ).asJava).all().get()
 
-        val repo = system.actorOf(TopicRepository.props(adminClient))
+        val repo = system.actorOf(EventRepository.props(adminClient))
 
         repo ! CollectTopics()
         val topicsCollected: TopicsCollected = expectMsgType[TopicsCollected]

@@ -1,14 +1,14 @@
-package no.sysco.middleware.kafka.event.collector.topic.internal
+package no.sysco.middleware.kafka.event.collector.topic
 
 import java.time.Duration
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.testkit.{ ImplicitSender, TestKit }
+import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import no.sysco.middleware.kafka.event.collector.model._
+import no.sysco.middleware.kafka.event.proto
 import no.sysco.middleware.kafka.event.proto.collector.TopicDescription.TopicPartitionInfo
 import no.sysco.middleware.kafka.event.proto.collector._
-import no.sysco.middleware.kafka.event.proto
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.concurrent.ExecutionContext
@@ -33,7 +33,10 @@ class TopicManagerSpec
       val topicEventTopic = "__topic"
       val interval = Duration.ofSeconds(100)
 
-      val manager = system.actorOf(TopicManager.props(interval, bootstrapServers, topicEventTopic))
+      val eventRepository = TestProbe()
+      val eventProducer = TestProbe()
+
+      val manager = system.actorOf(TopicManager.props(interval, eventRepository.ref, eventProducer.ref))
 
       manager ! TopicEvent("topic-1", TopicEvent.Event.TopicCreated(TopicCreated()))
       manager ! TopicEvent("topic-2", TopicEvent.Event.TopicCreated(TopicCreated()))

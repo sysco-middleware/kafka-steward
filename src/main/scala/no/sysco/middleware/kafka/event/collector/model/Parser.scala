@@ -1,7 +1,6 @@
 package no.sysco.middleware.kafka.event.collector.model
 
 import no.sysco.middleware.kafka.event.proto
-import no.sysco.middleware.kafka.event.proto.collector.ClusterUpdated
 import org.apache.kafka.clients.admin
 import org.apache.kafka.common
 
