@@ -5,7 +5,6 @@ import akka.kafka.scaladsl.Consumer
 import akka.kafka.{ ConsumerSettings, Subscriptions }
 import akka.stream.scaladsl.{ Keep, Sink }
 import akka.stream.{ ActorMaterializer, KillSwitches, UniqueKillSwitch }
-import com.typesafe.config.Config
 import no.sysco.middleware.kafka.event.proto.collector.CollectorEvent
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ ByteArrayDeserializer, StringDeserializer }

@@ -28,7 +28,7 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
   import TopicManager._
   import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
 
-  var topicsAndDescription: Map[String, Option[Description]] = Map()
+  var topicsAndDescription: Map[String, Option[TopicDescription]] = Map()
 
   def evaluateCurrentTopics(currentNames: List[String], names: List[String]): Unit = {
     currentNames match {
@@ -83,7 +83,7 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
     }
 
   def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = topicDescribed.topicAndDescription match {
-    case (name: String, description: Description) =>
+    case (name: String, description: TopicDescription) =>
       topicsAndDescription(name) match {
         case None =>
           eventProducer ! TopicEvent(name, TopicEvent.Event.TopicUpdated(Parser.toPb(description)))

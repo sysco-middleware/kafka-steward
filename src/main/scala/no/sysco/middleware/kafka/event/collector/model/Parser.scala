@@ -7,8 +7,8 @@ import org.apache.kafka.common
 object Parser {
   import scala.collection.JavaConverters._
 
-  def fromKafka(topicDescription: admin.TopicDescription): Description =
-    Description(
+  def fromKafka(topicDescription: admin.TopicDescription): TopicDescription =
+    TopicDescription(
       topicDescription.isInternal,
       topicDescription.partitions().asScala
         .map(partition =>
@@ -26,8 +26,8 @@ object Parser {
     Node(node.id(), node.host(), node.port(), node.rack())
   }
 
-  def fromPb(name: String, topicDescription: proto.collector.TopicDescription): Description =
-    Description(
+  def fromPb(name: String, topicDescription: proto.collector.TopicDescription): TopicDescription =
+    TopicDescription(
       topicDescription.internal,
       topicDescription.topicPartitions
         .map(tp =>
@@ -39,7 +39,7 @@ object Parser {
 
   def fromPb(node: proto.collector.Node): Node = Node(node.id, node.host, node.port, node.rack)
 
-  def toPb(topicDescription: Description): proto.collector.TopicUpdated =
+  def toPb(topicDescription: TopicDescription): proto.collector.TopicUpdated =
     proto.collector.TopicUpdated(
       Some(
         proto.collector.TopicDescription(

@@ -30,8 +30,6 @@ class TopicManagerSpec
       implicit val actorMaterializer: ActorMaterializer = ActorMaterializer()
       implicit val executionContext: ExecutionContext = system.dispatcher
 
-      val bootstrapServers = s"localhost:0"
-      val topicEventTopic = "__topic"
       val interval = Duration.ofSeconds(100)
 
       val eventRepository = TestProbe()
@@ -55,9 +53,9 @@ class TopicManagerSpec
           TopicEvent.Event.TopicUpdated(
             TopicUpdated(
               Some(
-                TopicDescription(
+                proto.collector.TopicDescription(
                   internal = false,
-                  List(TopicPartitionInfo(0, Some(proto.collector.Node(0, "localhost", 9092, "1")))))))))
+                  List(proto.collector.TopicDescription.TopicPartitionInfo(0, Some(proto.collector.Node(0, "localhost", 9092, "1")))))))))
 
       manager ! ListTopics()
       val topicsV1 = expectMsgType[Topics]
