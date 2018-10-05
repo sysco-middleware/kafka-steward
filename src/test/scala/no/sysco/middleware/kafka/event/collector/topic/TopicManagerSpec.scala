@@ -6,6 +6,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import no.sysco.middleware.kafka.event.collector.model._
+import no.sysco.middleware.kafka.event.collector.topic.TopicManager.ListTopics
 import no.sysco.middleware.kafka.event.proto
 import no.sysco.middleware.kafka.event.proto.collector.TopicDescription.TopicPartitionInfo
 import no.sysco.middleware.kafka.event.proto.collector._

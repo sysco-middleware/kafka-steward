@@ -6,9 +6,13 @@ import no.sysco.middleware.kafka.event.proto.collector.{ NodeCreated, NodeEvent,
 
 object NodeManager {
   def props(eventProducer: ActorRef): Props = Props(new NodeManager(eventProducer))
+
+  case class ListNodes()
 }
 
 class NodeManager(eventProducer: ActorRef) extends Actor {
+
+  import NodeManager._
 
   var nodes: Map[Int, Node] = Map()
 

@@ -3,7 +3,7 @@ package no.sysco.middleware.kafka.event.collector.cluster
 import java.time.Duration
 
 import akka.actor.{ Actor, ActorRef, Props }
-import no.sysco.middleware.kafka.event.collector.model.{ Cluster, ClusterDescribed, DescribeCluster, GetCluster, NodesDescribed, Parser }
+import no.sysco.middleware.kafka.event.collector.model.{ Cluster, ClusterDescribed, NodesDescribed, Parser }
 import no.sysco.middleware.kafka.event.proto.collector.{ ClusterCreated, ClusterEvent, ClusterUpdated, Node, NodeEvent }
 
 import scala.concurrent.ExecutionContext
@@ -11,10 +11,15 @@ import scala.concurrent.ExecutionContext
 object ClusterManager {
   def props(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit executionContext: ExecutionContext) =
     Props(new ClusterManager(pollInterval, eventProducer, eventProducer))
+
+  case class GetCluster()
 }
 
 class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit executionContext: ExecutionContext)
   extends Actor {
+
+  import ClusterManager._
+  import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
 
   val nodeManager: ActorRef = context.actorOf(NodeManager.props(eventRepository))
 

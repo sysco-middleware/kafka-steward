@@ -2,27 +2,17 @@ package no.sysco.middleware.kafka.event.collector.internal
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
-import com.typesafe.config.ConfigFactory
-import net.manub.embeddedkafka.{ EmbeddedKafka, EmbeddedKafkaConfig }
-import no.sysco.middleware.kafka.event.proto.collector.{ CollectorEvent, TopicCreated, TopicEvent }
-import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
+import no.sysco.middleware.kafka.event.proto.collector.{CollectorEvent, TopicCreated, TopicEvent}
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 class EventProducerConsumerSpec
-  extends TestKit(ActorSystem("test-event-producer-consumer", ConfigFactory.parseString(
-    """
-      akka.kafka.consumer {
-        poll-interval = 100ms
-        kafka-clients {
-          enable-auto-commit = false
-          auto-offset-reset = earliest
-        }
-      }
-  """)))
+  extends TestKit(ActorSystem("test-event-producer-consumer"))
   with ImplicitSender
   with WordSpecLike
   with Matchers

@@ -4,7 +4,7 @@ import java.util.Properties
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{ Actor, ActorRef, Props }
-import no.sysco.middleware.kafka.event.collector.model._
+import no.sysco.middleware.kafka.event.collector.model.{ ClusterDescribed, Parser, TopicDescribed, TopicsCollected }
 import org.apache.kafka.clients.admin.{ AdminClient, AdminClientConfig }
 
 import scala.collection.JavaConverters._
@@ -16,6 +16,10 @@ object EventRepository {
     adminConfigs.setProperty(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers)
     Props(new EventRepository(AdminClient.create(adminConfigs)))
   }
+
+  case class DescribeCluster()
+  case class CollectTopics()
+  case class DescribeTopic(name: String)
 }
 
 /**
@@ -24,6 +28,8 @@ object EventRepository {
  * @param adminClient Client to connect to a Kafka Cluster.
  */
 class EventRepository(adminClient: AdminClient) extends Actor {
+
+  import EventRepository._
 
   def handleDescribeCluster(): Unit = {
     val thisSender: ActorRef = sender()

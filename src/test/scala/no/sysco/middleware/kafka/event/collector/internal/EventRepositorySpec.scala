@@ -5,6 +5,7 @@ import java.util.Properties
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
+import no.sysco.middleware.kafka.event.collector.internal.EventRepository.{CollectTopics, DescribeTopic}
 import no.sysco.middleware.kafka.event.collector.model._
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig, NewTopic}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}

@@ -12,6 +12,8 @@ import scala.concurrent.ExecutionContext
 object TopicManager {
   def props(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, executionContext: ExecutionContext) =
     Props(new TopicManager(pollInterval, eventRepository, eventProducer))
+
+  case class ListTopics()
 }
 
 /**
@@ -22,6 +24,9 @@ object TopicManager {
 //TODO doc other params
 class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, val executionContext: ExecutionContext)
   extends Actor {
+
+  import TopicManager._
+  import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
 
   var topicsAndDescription: Map[String, Option[Description]] = Map()
 
