@@ -10,6 +10,10 @@ object NodeManager {
   case class ListNodes()
 }
 
+/**
+  * Manage Cluster Nodes state.
+  * @param eventProducer Reference to producer, to publish events.
+  */
 class NodeManager(eventProducer: ActorRef) extends Actor {
 
   import NodeManager._

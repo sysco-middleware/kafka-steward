@@ -18,6 +18,12 @@ object Collector {
   new Collector()
 }
 
+/**
+  *
+  * @param actorSystem
+  * @param actorMaterializer
+  * @param executionContext
+  */
 class Collector(implicit actorSystem: ActorSystem, actorMaterializer: ActorMaterializer, executionContext: ExecutionContext) extends Actor {
   val config: CollectorConfig = new CollectorConfig(ConfigFactory.load())
 

@@ -4,6 +4,9 @@ import no.sysco.middleware.kafka.event.proto
 import org.apache.kafka.clients.admin
 import org.apache.kafka.common
 
+/**
+  * Translate between sources as Kafka API and Protocol Buffers
+  */
 object Parser {
   import scala.collection.JavaConverters._
 

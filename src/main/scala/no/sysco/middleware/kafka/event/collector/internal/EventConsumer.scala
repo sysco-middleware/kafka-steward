@@ -20,11 +20,11 @@ object EventConsumer {
 }
 
 /**
- * Consume Cluster events.
+ * Consume Collector events.
  *
- * @param eventCollectorManager Reference to CollectorEvent Collector Manager, to consume events further.
+ * @param collectorManager Reference to Collector Manager, which consume this events.
  */
-class EventConsumer(eventCollectorManager: ActorRef, bootstrapServers: String, eventTopic: String)(implicit materializer: ActorMaterializer, executionContext: ExecutionContext)
+class EventConsumer(collectorManager: ActorRef, bootstrapServers: String, eventTopic: String)(implicit materializer: ActorMaterializer, executionContext: ExecutionContext)
   extends Actor {
 
   val consumerSettings: ConsumerSettings[String, Array[Byte]] =
@@ -39,7 +39,7 @@ class EventConsumer(eventCollectorManager: ActorRef, bootstrapServers: String, e
     Consumer.plainSource(consumerSettings, Subscriptions.topics(eventTopic))
       .map(record => CollectorEvent.parseFrom(record.value()))
       .mapAsync(1)(event => Future {
-        eventCollectorManager ! event
+        collectorManager ! event
       })
       .viaMat(KillSwitches.single)(Keep.right)
       .to(Sink.ignore)

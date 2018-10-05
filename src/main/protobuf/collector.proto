@@ -5,8 +5,9 @@ package kafka.event.collector.proto;
 option java_package = "no.sysco.middleware.kafka.event.proto";
 option java_multiple_files = true;
 
-//WIP
+// Events collected will have be covered by this type.
 message CollectorEvent {
+  // Types of Entities supported
   enum EntityType {
     CLUSTER = 0;
     NODE = 1;
@@ -21,6 +22,7 @@ message CollectorEvent {
   }
 }
 
+// Supported Cluster Events
 message ClusterEvent {
   string id = 1;
   oneof event {
@@ -37,6 +39,7 @@ message ClusterUpdated {
   Node controller = 1;
 }
 
+// Supported Node Events
 message NodeEvent {
   int32 id = 1;
   oneof event {
@@ -53,6 +56,7 @@ message NodeUpdated {
   Node node = 1;
 }
 
+// Supported Topic Events
 message TopicEvent {
   string name = 1;
   oneof event {
@@ -90,5 +94,3 @@ message Node {
   int32 port = 3;
   string rack = 4;
 }
-
-

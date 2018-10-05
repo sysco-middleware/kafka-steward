@@ -2,10 +2,10 @@ package no.sysco.middleware.kafka.event.collector.topic
 
 import java.time.Duration
 
-import akka.actor.{ Actor, ActorRef, Props }
+import akka.actor.{Actor, ActorRef, Props}
 import akka.stream.ActorMaterializer
 import no.sysco.middleware.kafka.event.collector.model._
-import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent }
+import no.sysco.middleware.kafka.event.proto.collector.{TopicCreated, TopicDeleted, TopicEvent}
 
 import scala.concurrent.ExecutionContext
 
@@ -20,8 +20,9 @@ object TopicManager {
  * Observe and publish Topic events.
  *
  * @param pollInterval     Frequency to poll topics from a Kafka Cluster.
+  * @param eventRepository Reference to Repository where events are stored.
+  * @param eventProducer   Reference to Events producer, to publish events.
  */
-//TODO doc other params
 class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, val executionContext: ExecutionContext)
   extends Actor {
 
@@ -41,7 +42,6 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
   }
 
   def handleTopicsCollected(topicsCollected: TopicsCollected): Unit = {
-    //    val topics = topicsCollected.names.filter(_.equals(topicEventTopic))
     evaluateCurrentTopics(topicsAndDescription.keys.toList, topicsCollected.names)
     evaluateTopicsCollected(topicsCollected.names)
   }
