@@ -7,7 +7,7 @@ This module is designed to expose those events in a Kafka Topics so it can be co
 
 ## How to run it
 
-There are 3 parameters to configure
+There are 4 parameters to configure
 
 | Configuration                   | Description                                  | Default Value   | Environmental Variable          |
 |---------------------------------|----------------------------------------------|-----------------|---------------------------------|
