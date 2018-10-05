@@ -9,6 +9,9 @@ This module is designed to expose those events in a Kafka Topics so it can be co
 
 There are 3 parameters to configure
 
-| Configuration | Description | Default Value | Environmental Variable |
-|---------------|-------------|---------------|------------------------|
-| 
+| Configuration                   | Description                                  | Default Value   | Environmental Variable          |
+|---------------------------------|----------------------------------------------|-----------------|---------------------------------|
+| kafka.bootstrap-servers         | Kafka Bootstrap Servers address (host:port). | localhost:29092 | KAFKA_BOOTSTRAP_SERVERS         |
+| collector.event-topic           | Kafka Topic to store events.                 | __collector     | COLLECTOR_EVENT_TOPIC           |
+| collector.topic.poll-interval   | Interval to query Kafka Topics.              | 1 minute        | COLLECTOR_TOPIC_POLL_INTERVAL   |
+| collector.cluster.poll-interval | Interval to query Kafka Cluter.              | 30 minutes      | COLLECTOR_CLUSTER_POLL_INTERVAL |
