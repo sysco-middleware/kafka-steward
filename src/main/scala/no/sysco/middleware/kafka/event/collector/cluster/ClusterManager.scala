@@ -45,7 +45,7 @@ class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventPro
   }
 
   def handleClusterDescribed(clusterDescribed: ClusterDescribed): Unit = {
-    log.info(s"Handling cluster ${clusterDescribed.id} described event.")
+    log.info("Handling cluster {} described event.", clusterDescribed.id)
     val controller: Option[Node] = clusterDescribed.controller match {
       case Some(c) => Some(Parser.toPb(c))
       case None    => None
@@ -68,7 +68,7 @@ class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventPro
   }
 
   def handleClusterEvent(clusterEvent: ClusterEvent): Unit = {
-    log.info(s"Handling cluster ${clusterEvent.id} event.")
+    log.info("Handling cluster {} event.", clusterEvent.id)
     clusterEvent.event match {
       case event if event.isClusterCreated =>
         event.clusterCreated match {

@@ -60,7 +60,7 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
   }
 
   def handleTopicEvent(topicEvent: TopicEvent): Unit = {
-    log.info(s"Handling topic ${topicEvent.name} event.")
+    log.info("Handling topic {} event.", topicEvent.name)
     topicEvent.event match {
       case event if event.isTopicCreated =>
         event.topicCreated match {
@@ -87,7 +87,7 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
 
   def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = topicDescribed.topicAndDescription match {
     case (name: String, description: TopicDescription) =>
-      log.info(s"Handling topic $name described.")
+      log.info("Handling topic {} described.", name)
       topicsAndDescription(name) match {
         case None =>
           eventProducer ! TopicEvent(name, TopicEvent.Event.TopicUpdated(Parser.toPb(description)))

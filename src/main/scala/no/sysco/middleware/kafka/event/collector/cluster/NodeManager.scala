@@ -49,19 +49,19 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
       case Nil =>
       case node :: ns =>
         if (!nodes.contains(node))
-          log.warning(s"$node is not listed")
+          log.warning(" is not listed")
         evaluateCurrentNodes(ns, nodes)
     }
   }
 
   def handleNodesDescribed(nodesDescribed: NodesDescribed): Unit = {
-    log.info(s"Handling ${nodesDescribed.nodes.size} nodes described event.")
+    log.info("Handling {} nodes described event.", nodesDescribed.nodes.size)
     evaluateCurrentNodes(nodes.values.toList, nodesDescribed.nodes)
     evaluateNodesDescribed(nodesDescribed.nodes)
   }
 
   def handleNodeEvent(nodeEvent: NodeEvent): Unit = {
-    log.info(s"Handling node ${nodeEvent.id} event.")
+    log.info("Handling node {} event.", nodeEvent.id)
     nodeEvent.event match {
       case event if event.isNodeCreated =>
         event.nodeCreated match {
