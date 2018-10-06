@@ -8,6 +8,8 @@ object Versions {
 
   val logback         = "1.1.3"
   val opencensus = "0.6.0"
+  val opencensusExporterPrometheus = "0.15.0"
+  val prometheusClientHttpServer = "0.4.0"
 
   val scalaTest = "3.0.5"
   val scalaTestEmbeddedKafka = "2.0.0"
@@ -30,6 +32,8 @@ object Dependencies {
 
   // metrics dependencies
   val opencensus = "com.github.sebruck" %% "opencensus-scala-core" % Versions.opencensus
+  val opencensusExporterPrometheus = "io.opencensus" % "opencensus-exporter-stats-prometheus"  % Versions.opencensusExporterPrometheus
+  val prometheusClientHttpServer = "io.prometheus" % "simpleclient_httpserver" % Versions.prometheusClientHttpServer
 
   // test dependencies
   val scalaTest = "org.scalatest" %% "scalatest" % Versions.scalaTest % Test

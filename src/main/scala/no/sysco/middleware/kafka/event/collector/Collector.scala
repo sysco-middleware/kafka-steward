@@ -3,6 +3,7 @@ package no.sysco.middleware.kafka.event.collector
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
+import io.opencensus.exporter.stats.prometheus.PrometheusStatsCollector
 import no.sysco.middleware.kafka.event.collector.http.HttpCollectorQueryService
 
 import scala.concurrent.ExecutionContext
@@ -21,6 +22,9 @@ object Collector extends App {
   val httpCollectorQueryService = new HttpCollectorQueryService(collector)
 
   val bindingFuture = Http().bindAndHandle(httpCollectorQueryService.route, "0.0.0.0", 8080)
+
+  PrometheusStatsCollector.createAndRegister()
+  val server = new io.prometheus.client.exporter.HTTPServer(8081)
 
   sys.addShutdownHook(
     bindingFuture

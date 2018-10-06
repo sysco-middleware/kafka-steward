@@ -17,15 +17,17 @@ libraryDependencies ++= Seq(
   akkaStreams,
   alpakkaKafka,
   kafkaClients,
-  
+
   akkaHttp,
   akkaHttpSpray,
 
   akkaSlf4j,
   logback,
-  
+
   opencensus,
-  
+  opencensusExporterPrometheus,
+  prometheusClientHttpServer,
+
   scalaPb
 )
 

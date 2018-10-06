@@ -34,23 +34,6 @@ class CollectorManager(implicit actorSystem: ActorSystem, actorMaterializer: Act
 
   val eventConsumer: ActorRef = context.actorOf(EventConsumer.props(self, config.Kafka.bootstrapServers, config.Collector.eventTopic), "event-consumer")
 
-  val entityTypeTagName = "entity_type"
-  val tryTotalMessageReceivedMeasure: Try[MeasureDouble] = for {
-    // Create a new measure
-    measure <- Measure.double("my_measure", "what a cool measure", "by")
-    // Create & register a view which aggregates this measure
-    view <- View("my_view",
-      "view description",
-      measure,
-      List(entityTypeTagName),
-      Sum)
-    _ <- Stats.registerView(view)
-  } yield measure
-  val totalMessageReceivedMeasure: MeasureDouble = tryTotalMessageReceivedMeasure.get
-  val clusterTypeTag: Tag = Tag(entityTypeTagName, EntityType.CLUSTER.name).get
-  val nodeTypeTag: Tag = Tag(entityTypeTagName, EntityType.NODE.name).get
-  val topicTypeTag: Tag = Tag(entityTypeTagName, EntityType.TOPIC.name).get
-
   override def receive: Receive = {
     case collectorEvent: CollectorEvent => handleEvent(collectorEvent)
     case _                              => // log unexpected message
@@ -67,9 +50,7 @@ class CollectorManager(implicit actorSystem: ActorSystem, actorMaterializer: Act
 
   private def handleClusterEvent(clusterEvent: Option[ClusterEvent]): Unit = {
     clusterEvent match {
-      case Some(clusterEventValue) =>
-        Stats.record(List(clusterTypeTag), Measurement.double(totalMessageReceivedMeasure, 1))
-        clusterEventCollector ! clusterEventValue
+      case Some(clusterEventValue) => clusterEventCollector ! clusterEventValue
       case None                    =>
     }
   }
@@ -77,7 +58,6 @@ class CollectorManager(implicit actorSystem: ActorSystem, actorMaterializer: Act
   private def handleNodeEvent(nodeEvent: Option[NodeEvent]): Unit = {
     nodeEvent match {
       case Some(nodeEventValue) =>
-        Stats.record(List(nodeTypeTag), Measurement.double(totalMessageReceivedMeasure, 1))
         clusterEventCollector ! nodeEventValue
       case None                 =>
     }
@@ -86,7 +66,6 @@ class CollectorManager(implicit actorSystem: ActorSystem, actorMaterializer: Act
   private def handleTopicEvent(topicEvent: Option[TopicEvent]): Unit = {
     topicEvent match {
       case Some(topicEventValue) =>
-        Stats.record(List(topicTypeTag), Measurement.double(totalMessageReceivedMeasure, 1))
         topicEventCollector ! topicEventValue
       case None                  =>
     }
