@@ -11,7 +11,8 @@ object Metrics {
   val entityOperationTagName = "entity_operation"
   val tryTotalMessageConsumedMeasure: Try[MeasureDouble] = for {
     measure <- Measure.double("collector_message_consumed", "Total event messages consumed", "by")
-    view <- View("collector_message_consumed_total",
+    view <- View(
+      "collector_message_consumed_total",
       "Total messages consumed by entity type by entity and operation",
       measure,
       List(entityTypeTagName, entityOperationTagName),
@@ -20,7 +21,8 @@ object Metrics {
   } yield measure
   val tryTotalMessageProducedMeasure: Try[MeasureDouble] = for {
     measure <- Measure.double("collector_message_produced", "Total event messages produced", "by")
-    view <- View("collector_message_produced_total",
+    view <- View(
+      "collector_message_produced_total",
       "Total messages produced by entity type by entity and operation",
       measure,
       List(entityTypeTagName, entityOperationTagName),

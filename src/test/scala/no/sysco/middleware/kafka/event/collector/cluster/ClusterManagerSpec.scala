@@ -4,12 +4,12 @@ import java.time.Duration
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import no.sysco.middleware.kafka.event.collector.cluster.ClusterManager.GetCluster
 import no.sysco.middleware.kafka.event.collector.internal.Parser
 import no.sysco.middleware.kafka.event.collector.model.Cluster
 import no.sysco.middleware.kafka.event.proto.collector._
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.concurrent.ExecutionContext
 
