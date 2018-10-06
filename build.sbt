@@ -15,6 +15,8 @@ lazy val root = project
 
 libraryDependencies ++= Seq(
   akkaStreams,
+  akkaHttp,
+  akkaHttpSpray,
   kafkaClients,
   akkaSlf4j,
   logback,

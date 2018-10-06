@@ -2,8 +2,9 @@ package no.sysco.middleware.kafka.event.collector.cluster
 
 import java.time.Duration
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
-import no.sysco.middleware.kafka.event.collector.model.{ Cluster, ClusterDescribed, NodesDescribed, Parser }
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import no.sysco.middleware.kafka.event.collector.cluster.NodeManager.ListNodes
+import no.sysco.middleware.kafka.event.collector.model.{Cluster, ClusterDescribed, NodesDescribed, Parser}
 import no.sysco.middleware.kafka.event.proto.collector._
 
 import scala.concurrent.ExecutionContext
@@ -104,5 +105,6 @@ class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventPro
     case clusterEvent: ClusterEvent         => handleClusterEvent(clusterEvent)
     case nodeEvent: NodeEvent               => handleNodeEvent(nodeEvent)
     case GetCluster()                       => handleGetCluster()
+    case listNodes: ListNodes               => nodeManager forward listNodes
   }
 }
