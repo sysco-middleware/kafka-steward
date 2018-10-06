@@ -3,10 +3,10 @@ package no.sysco.middleware.kafka.event.collector.internal
 import java.util.Properties
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ AbstractActor, AbstractLoggingActor, Actor, ActorLogging, Props }
-import no.sysco.middleware.kafka.event.proto.collector.{ ClusterEvent, CollectorEvent, NodeEvent, TopicEvent }
-import org.apache.kafka.clients.producer.{ KafkaProducer, Producer, ProducerConfig, ProducerRecord }
-import org.apache.kafka.common.serialization.{ ByteArraySerializer, StringSerializer }
+import akka.actor.{Actor, ActorLogging, Props}
+import no.sysco.middleware.kafka.event.proto.collector.{ClusterEvent, CollectorEvent, NodeEvent, TopicEvent}
+import org.apache.kafka.clients.producer.{KafkaProducer, Producer, ProducerConfig, ProducerRecord}
+import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
 
 object EventProducer {
 
@@ -29,7 +29,7 @@ class EventProducer(eventTopic: String, producer: Producer[String, Array[Byte]])
   extends Actor with ActorLogging {
 
   def handleEvent(event: CollectorEvent): Unit = {
-    log.info(s"Handling collector event ${event.entityType}-${event.entityId}.")
+    log.info("Handling collector event {}-{}.", event.entityType, event.entityId)
     val byteArray = event.toByteArray
     producer.send(
       new ProducerRecord(

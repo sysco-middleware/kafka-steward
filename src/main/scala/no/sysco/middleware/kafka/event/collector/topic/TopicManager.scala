@@ -2,10 +2,10 @@ package no.sysco.middleware.kafka.event.collector.topic
 
 import java.time.Duration
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.stream.ActorMaterializer
 import no.sysco.middleware.kafka.event.collector.model._
-import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent }
+import no.sysco.middleware.kafka.event.proto.collector.{TopicCreated, TopicDeleted, TopicEvent}
 
 import scala.concurrent.ExecutionContext
 
@@ -60,7 +60,7 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
   }
 
   def handleTopicEvent(topicEvent: TopicEvent): Unit = {
-    log.info(s"Handling topic ${topicEvent.name} event.")
+    log.info("Handling topic {} event.", topicEvent.name)
     topicEvent.event match {
       case event if event.isTopicCreated =>
         event.topicCreated match {
@@ -87,7 +87,7 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
 
   def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = topicDescribed.topicAndDescription match {
     case (name: String, description: TopicDescription) =>
-      log.info(s"Handling topic $name described.")
+      log.info("Handling topic {} described.", name)
       topicsAndDescription(name) match {
         case None =>
           eventProducer ! TopicEvent(name, TopicEvent.Event.TopicUpdated(Parser.toPb(description)))

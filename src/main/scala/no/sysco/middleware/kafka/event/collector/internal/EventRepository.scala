@@ -60,7 +60,7 @@ class EventRepository(adminClient: AdminClient) extends Actor with ActorLogging 
   }
 
   def handleDescribeTopic(describeTopic: DescribeTopic): Unit = {
-    log.info(s"Handling describe topic ${describeTopic.name} command.")
+    log.info("Handling describe topic {} command.", describeTopic.name)
     val thisSender: ActorRef = sender()
     adminClient.describeTopics(List(describeTopic.name).asJava)
       .all()
