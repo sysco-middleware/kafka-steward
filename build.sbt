@@ -3,7 +3,6 @@ import scalariform.formatter.preferences._
 
 lazy val settings = Seq(
   scalaVersion := "2.12.7",
-  version := "0.1.0-SNAPSHOT",
 )
 
 lazy val root = project
