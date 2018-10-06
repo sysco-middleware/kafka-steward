@@ -5,7 +5,7 @@ import java.util.Properties
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
-import no.sysco.middleware.kafka.event.collector.internal.EventRepository.{CollectTopics, DescribeTopic}
+import no.sysco.middleware.kafka.event.collector.internal.EventRepository.{CollectTopics, DescribeCluster, DescribeTopic}
 import no.sysco.middleware.kafka.event.collector.model._
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig, NewTopic}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
@@ -26,13 +26,20 @@ class EventRepositorySpec
 
   val kafkaConfig: EmbeddedKafkaConfig = EmbeddedKafkaConfig(kafkaPort = 0, zooKeeperPort = 0)
 
-
   "Event Repository" must {
-    "send back topic and description" in {
+    "send back cluster, nodes, topic and description" in {
+
       withRunningKafkaOnFoundPort(kafkaConfig) { implicit actualConfig =>
         val adminConfigs = new Properties()
         adminConfigs.setProperty(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, s"localhost:${actualConfig.kafkaPort}")
         val adminClient = AdminClient.create(adminConfigs)
+
+        val repo = system.actorOf(EventRepository.props(adminClient))
+        repo ! DescribeCluster()
+        val clusterDescribed: ClusterDescribed = expectMsgType[ClusterDescribed]
+        assert(!clusterDescribed.id.isEmpty)
+        assert(clusterDescribed.controller.isDefined)
+        assert(clusterDescribed.nodes.size == 1)
 
         adminClient
           .createTopics(
@@ -42,7 +49,6 @@ class EventRepositorySpec
               new NewTopic("test-3", 1, 1),
             ).asJava).all().get()
 
-        val repo = system.actorOf(EventRepository.props(adminClient))
 
         repo ! CollectTopics()
         val topicsCollected: TopicsCollected = expectMsgType[TopicsCollected]

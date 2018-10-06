@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext
 
 object ClusterManager {
   def props(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit executionContext: ExecutionContext) =
-    Props(new ClusterManager(pollInterval, eventProducer, eventProducer))
+    Props(new ClusterManager(pollInterval, eventRepository, eventProducer))
 
   case class GetCluster()
 }
