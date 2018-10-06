@@ -1,13 +1,15 @@
-package no.sysco.middleware.kafka.event.collector.topic.internal
+package no.sysco.middleware.kafka.event.collector.topic
 
 import java.time.Duration
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.testkit.{ ImplicitSender, TestKit }
+import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
+import no.sysco.middleware.kafka.event.collector.model._
+import no.sysco.middleware.kafka.event.collector.topic.TopicManager.ListTopics
+import no.sysco.middleware.kafka.event.proto
 import no.sysco.middleware.kafka.event.proto.collector.TopicDescription.TopicPartitionInfo
 import no.sysco.middleware.kafka.event.proto.collector._
-import no.sysco.middleware.kafka.event.proto
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.concurrent.ExecutionContext
@@ -28,11 +30,12 @@ class TopicManagerSpec
       implicit val actorMaterializer: ActorMaterializer = ActorMaterializer()
       implicit val executionContext: ExecutionContext = system.dispatcher
 
-      val bootstrapServers = s"localhost:0"
-      val topicEventTopic = "__topic"
       val interval = Duration.ofSeconds(100)
 
-      val manager = system.actorOf(TopicManager.props(interval, bootstrapServers, topicEventTopic))
+      val eventRepository = TestProbe()
+      val eventProducer = TestProbe()
+
+      val manager = system.actorOf(TopicManager.props(interval, eventRepository.ref, eventProducer.ref))
 
       manager ! TopicEvent("topic-1", TopicEvent.Event.TopicCreated(TopicCreated()))
       manager ! TopicEvent("topic-2", TopicEvent.Event.TopicCreated(TopicCreated()))
@@ -50,9 +53,9 @@ class TopicManagerSpec
           TopicEvent.Event.TopicUpdated(
             TopicUpdated(
               Some(
-                TopicDescription(
+                proto.collector.TopicDescription(
                   internal = false,
-                  List(TopicPartitionInfo(0, Some(proto.collector.Node(0, "localhost", 9092, "1")))))))))
+                  List(proto.collector.TopicDescription.TopicPartitionInfo(0, Some(proto.collector.Node(0, "localhost", 9092, "1")))))))))
 
       manager ! ListTopics()
       val topicsV1 = expectMsgType[Topics]

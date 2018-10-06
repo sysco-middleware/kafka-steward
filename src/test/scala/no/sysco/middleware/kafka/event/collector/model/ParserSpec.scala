@@ -1,22 +1,21 @@
-package no.sysco.middleware.kafka.event.collector.topic.internal
+package no.sysco.middleware.kafka.event.collector.model
 
-import org.apache.kafka.clients.admin.TopicDescription
-import org.apache.kafka.common
-import org.apache.kafka.common.TopicPartitionInfo
-import org.scalatest.FlatSpec
 import no.sysco.middleware.kafka.event.proto
+import org.apache.kafka
+import org.scalatest.FlatSpec
 
 import scala.collection.JavaConverters._
 
 class ParserSpec extends FlatSpec {
 
   "A Parser" should "convert a Kafka Topic Description into a Local Description" in {
-    val node = new common.Node(0, "localhost", 9092)
-    val topicDescription: TopicDescription =
-      new TopicDescription(
+    val node = new kafka.common.Node(0, "localhost", 9092)
+    val replicas = List(node).asJava
+    val topicDescription: kafka.clients.admin.TopicDescription =
+      new kafka.clients.admin.TopicDescription(
         "topic",
         false,
-        List(new TopicPartitionInfo(0, node, List(node).asJava, List(node).asJava)).asJava)
+        List(new kafka.common.TopicPartitionInfo(0, node, replicas, replicas)).asJava)
     val description = Parser.fromKafka(topicDescription)
     assert(!description.internal)
     assert(description.partitions.size == 1)
