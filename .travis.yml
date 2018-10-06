@@ -18,7 +18,8 @@ deploy:
   script:
     - echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
     - sbt docker:publish
-#  on:
+  on:
+    all_branches: true
 #    branch: master
 
 before_cache:
