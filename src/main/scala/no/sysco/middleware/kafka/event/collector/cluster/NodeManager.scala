@@ -1,6 +1,6 @@
 package no.sysco.middleware.kafka.event.collector.cluster
 
-import akka.actor.{ Actor, ActorRef, Props }
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import no.sysco.middleware.kafka.event.collector.model._
 import no.sysco.middleware.kafka.event.proto.collector.{ NodeCreated, NodeEvent, NodeUpdated }
 
@@ -11,16 +11,16 @@ object NodeManager {
 }
 
 /**
-  * Manage Cluster Nodes state.
-  * @param eventProducer Reference to producer, to publish events.
-  */
-class NodeManager(eventProducer: ActorRef) extends Actor {
+ * Manage Cluster Nodes state.
+ * @param eventProducer Reference to producer, to publish events.
+ */
+class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
 
   import NodeManager._
 
   var nodes: Map[Int, Node] = Map()
 
-  def evaluateNodesDescribed(listedNodes: List[Node]): Unit = {
+  private def evaluateNodesDescribed(listedNodes: List[Node]): Unit = {
     listedNodes match {
       case Nil =>
       case node :: ns =>
@@ -44,22 +44,24 @@ class NodeManager(eventProducer: ActorRef) extends Actor {
     }
   }
 
-  def evaluateCurrentNodes(currentNodes: List[Node], nodes: List[Node]): Unit = {
+  private def evaluateCurrentNodes(currentNodes: List[Node], nodes: List[Node]): Unit = {
     currentNodes match {
       case Nil =>
       case node :: ns =>
         if (!nodes.contains(node))
-          //TODO eval if nodes could appear as removed
-          evaluateCurrentNodes(ns, nodes)
+          log.warning(s"$node is not listed")
+        evaluateCurrentNodes(ns, nodes)
     }
   }
 
   def handleNodesDescribed(nodesDescribed: NodesDescribed): Unit = {
+    log.info(s"Handling ${nodesDescribed.nodes.size} nodes described event.")
     evaluateCurrentNodes(nodes.values.toList, nodesDescribed.nodes)
     evaluateNodesDescribed(nodesDescribed.nodes)
   }
 
   def handleNodeEvent(nodeEvent: NodeEvent): Unit = {
+    log.info(s"Handling node ${nodeEvent.id} event.")
     nodeEvent.event match {
       case event if event.isNodeCreated =>
         event.nodeCreated match {
@@ -78,7 +80,7 @@ class NodeManager(eventProducer: ActorRef) extends Actor {
 
   def handleListNodes(): Unit = sender() ! Nodes(nodes)
 
-  override def receive: Receive = {
+  override def receive(): Receive = {
     case nodesDescribed: NodesDescribed => handleNodesDescribed(nodesDescribed)
     case nodeEvent: NodeEvent           => handleNodeEvent(nodeEvent)
     case ListNodes()                    => handleListNodes()

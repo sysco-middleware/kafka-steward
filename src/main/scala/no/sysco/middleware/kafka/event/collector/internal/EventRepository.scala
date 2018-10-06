@@ -3,7 +3,7 @@ package no.sysco.middleware.kafka.event.collector.internal
 import java.util.Properties
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ Actor, ActorRef, Props }
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import no.sysco.middleware.kafka.event.collector.model.{ ClusterDescribed, Parser, TopicDescribed, TopicsCollected }
 import org.apache.kafka.clients.admin.{ AdminClient, AdminClientConfig }
 
@@ -27,11 +27,12 @@ object EventRepository {
  *
  * @param adminClient Client to connect to a Kafka Cluster.
  */
-class EventRepository(adminClient: AdminClient) extends Actor {
+class EventRepository(adminClient: AdminClient) extends Actor with ActorLogging {
 
   import EventRepository._
 
   def handleDescribeCluster(): Unit = {
+    log.info("Handling describe cluster command.")
     val thisSender: ActorRef = sender()
     val clusterResult = adminClient.describeCluster()
     clusterResult.clusterId()
@@ -51,6 +52,7 @@ class EventRepository(adminClient: AdminClient) extends Actor {
   }
 
   def handleCollectTopics(): Unit = {
+    log.info("Handling collect topics command.")
     val thisSender: ActorRef = sender()
     adminClient.listTopics()
       .names()
@@ -58,6 +60,7 @@ class EventRepository(adminClient: AdminClient) extends Actor {
   }
 
   def handleDescribeTopic(describeTopic: DescribeTopic): Unit = {
+    log.info(s"Handling describe topic ${describeTopic.name} command.")
     val thisSender: ActorRef = sender()
     adminClient.describeTopics(List(describeTopic.name).asJava)
       .all()
@@ -68,11 +71,11 @@ class EventRepository(adminClient: AdminClient) extends Actor {
             Parser.fromKafka(topicsAndDescription.get(describeTopic.name))))
   }
 
-  override def receive: Receive = {
+  override def postStop(): Unit = adminClient.close(1, TimeUnit.SECONDS)
+
+  override def receive(): Receive = {
     case DescribeCluster()             => handleDescribeCluster()
     case CollectTopics()               => handleCollectTopics()
     case describeTopics: DescribeTopic => handleDescribeTopic(describeTopics)
   }
-
-  override def postStop(): Unit = adminClient.close(1, TimeUnit.SECONDS)
 }

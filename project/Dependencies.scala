@@ -13,7 +13,7 @@ object Dependencies {
   val akkaStreams = "com.typesafe.akka" %% "akka-stream" % Versions.akkaStreams
 
   val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % Versions.akkaStreams
-  val akkaSlf4jLogback = "ch.qos.logback" % "logback-classic" % Versions.logback % Runtime
+  val logback = "ch.qos.logback" % "logback-classic" % Versions.logback % Runtime
 
   val kafkaClients = "org.apache.kafka" % "kafka-clients" % Versions.kafka
 
