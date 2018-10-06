@@ -2,7 +2,7 @@ package no.sysco.middleware.kafka.event.collector.http
 
 import akka.actor.ActorRef
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.server.{Directives, Route}
+import akka.http.scaladsl.server.{ Directives, Route }
 import akka.pattern.ask
 import akka.util.Timeout
 import no.sysco.middleware.kafka.event.collector.cluster.ClusterManager.GetCluster
@@ -41,6 +41,5 @@ class HttpCollectorQueryService(collector: ActorRef) extends Directives with Jso
           complete((collector ? ListNodes()).mapTo[Nodes])
         }
       }
-
 
 }

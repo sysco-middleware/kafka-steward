@@ -1,6 +1,6 @@
 package no.sysco.middleware.kafka.event.collector
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
@@ -8,7 +8,7 @@ import no.sysco.middleware.kafka.event.collector.cluster.ClusterManager
 import no.sysco.middleware.kafka.event.collector.cluster.ClusterManager.GetCluster
 import no.sysco.middleware.kafka.event.collector.cluster.NodeManager.ListNodes
 import no.sysco.middleware.kafka.event.collector.http.HttpCollectorQueryService
-import no.sysco.middleware.kafka.event.collector.internal.{EventConsumer, EventProducer, EventRepository}
+import no.sysco.middleware.kafka.event.collector.internal.{ EventConsumer, EventProducer, EventRepository }
 import no.sysco.middleware.kafka.event.collector.topic.TopicManager
 import no.sysco.middleware.kafka.event.collector.topic.TopicManager.ListTopics
 import no.sysco.middleware.kafka.event.proto.collector.CollectorEvent
@@ -19,7 +19,6 @@ import scala.concurrent.ExecutionContext
  * Application entry point.
  */
 object Collector extends App {
-
 
   implicit val actorSystem: ActorSystem = ActorSystem("collector-system")
   implicit val actorMaterializer: ActorMaterializer = ActorMaterializer()
@@ -56,7 +55,7 @@ class Collector(implicit actorSystem: ActorSystem, actorMaterializer: ActorMater
 
   override def receive(): Receive = {
     case getCluster: GetCluster => clusterEventCollector forward getCluster
-    case listNodes: ListNodes => clusterEventCollector forward listNodes
+    case listNodes: ListNodes   => clusterEventCollector forward listNodes
     case listTopics: ListTopics => topicEventCollector forward listTopics
     case collectorEvent: CollectorEvent =>
       log.info(s"Collector event received ${collectorEvent.entityType}-${collectorEvent.entityId}")
