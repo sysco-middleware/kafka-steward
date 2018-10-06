@@ -1,6 +1,9 @@
 package no.sysco.middleware.kafka.event.collector.cluster
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import io.opencensus.scala.Stats
+import io.opencensus.scala.stats.Measurement
+import no.sysco.middleware.kafka.event.collector.internal.Parser
 import no.sysco.middleware.kafka.event.collector.model._
 import no.sysco.middleware.kafka.event.proto.collector.{ NodeCreated, NodeEvent, NodeUpdated }
 
@@ -17,27 +20,22 @@ object NodeManager {
 class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
 
   import NodeManager._
+  import no.sysco.middleware.kafka.event.collector.metrics.Metrics._
 
-  var nodes: Map[Int, Node] = Map()
+  var nodes: Map[String, Node] = Map()
 
   private def evaluateNodesDescribed(listedNodes: List[Node]): Unit = {
     listedNodes match {
       case Nil =>
       case node :: ns =>
-        nodes.get(node.id) match {
+        nodes.get(String.valueOf(node.id)) match {
           case None =>
-            eventProducer !
-              NodeEvent(
-                node.id,
-                NodeEvent.Event.NodeCreated(
-                  NodeCreated(Some(Parser.toPb(node)))))
-          case Some(currentNode) =>
-            if (!currentNode.equals(node)) {
-              eventProducer !
-                NodeEvent(
-                  node.id,
-                  NodeEvent.Event.NodeUpdated(
-                    NodeUpdated(Some(Parser.toPb(node)))))
+            Stats.record(List(nodeTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+            eventProducer ! NodeEvent(node.id, NodeEvent.Event.NodeCreated(NodeCreated(Some(Parser.toPb(node)))))
+          case Some(thisNode) =>
+            if (!thisNode.equals(node)) {
+              Stats.record(List(nodeTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+              eventProducer ! NodeEvent(node.id, NodeEvent.Event.NodeUpdated(NodeUpdated(Some(Parser.toPb(node)))))
             }
         }
         evaluateNodesDescribed(ns)
@@ -48,9 +46,10 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
     currentNodes match {
       case Nil =>
       case node :: ns =>
-        if (!nodes.contains(node))
-          log.warning(" is not listed")
-        evaluateCurrentNodes(ns, nodes)
+        if (!nodes.contains(node)) {
+          log.warning("{} is not listed", node)
+          evaluateCurrentNodes(ns, nodes)
+        }
     }
   }
 
@@ -64,15 +63,17 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
     log.info("Handling node {} event.", nodeEvent.id)
     nodeEvent.event match {
       case event if event.isNodeCreated =>
+        Stats.record(List(nodeTypeTag, createdOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
         event.nodeCreated match {
           case Some(nodeCreated) =>
-            nodes = nodes + (nodeEvent.id -> Parser.fromPb(nodeCreated.getNode))
+            nodes = nodes + (String.valueOf(nodeEvent.id) -> Parser.fromPb(nodeCreated.getNode))
           case None =>
         }
       case event if event.isNodeUpdated =>
+        Stats.record(List(nodeTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
         event.nodeUpdated match {
           case Some(nodeUpdated) =>
-            nodes = nodes + (nodeEvent.id -> Parser.fromPb(nodeUpdated.getNode))
+            nodes = nodes + (String.valueOf(nodeEvent.id) -> Parser.fromPb(nodeUpdated.getNode))
           case None =>
         }
     }

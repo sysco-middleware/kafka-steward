@@ -4,7 +4,7 @@ import java.util.Properties
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
-import no.sysco.middleware.kafka.event.collector.model.{ ClusterDescribed, Parser, TopicDescribed, TopicsCollected }
+import no.sysco.middleware.kafka.event.collector.model.{ ClusterDescribed, TopicDescribed, TopicsCollected }
 import org.apache.kafka.clients.admin.{ AdminClient, AdminClientConfig }
 
 import scala.collection.JavaConverters._

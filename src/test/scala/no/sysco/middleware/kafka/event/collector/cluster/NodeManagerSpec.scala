@@ -50,7 +50,7 @@ class NodeManagerSpec
       manager ! ListNodes()
       val topicsV1 = expectMsgType[Nodes]
       assert(topicsV1.nodes.count(n => n._2.host.equals("localhost")) == 2)
-      assert(topicsV1.nodes(0).host.equals("host"))
+      assert(topicsV1.nodes("0").host.equals("host"))
     }
   }
 }

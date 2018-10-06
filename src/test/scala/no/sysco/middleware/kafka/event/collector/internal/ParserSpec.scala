@@ -1,4 +1,4 @@
-package no.sysco.middleware.kafka.event.collector.model
+package no.sysco.middleware.kafka.event.collector.internal
 
 import no.sysco.middleware.kafka.event.proto
 import org.apache.kafka
@@ -22,7 +22,7 @@ class ParserSpec extends FlatSpec {
   }
 
   it should "convert a PB Topic Description into a Local Description and vice-versa" in {
-    val nodePb = proto.collector.Node(0, "localhost", 9092)
+    val nodePb = proto.collector.Node(0, "localhost", 9092, null)
     val node = Parser.fromPb(nodePb)
     assert(node.host.equals("localhost"))
     assert(node.port == 9092)

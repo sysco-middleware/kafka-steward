@@ -15,12 +15,19 @@ lazy val root = project
 
 libraryDependencies ++= Seq(
   akkaStreams,
+  alpakkaKafka,
+  kafkaClients,
+
   akkaHttp,
   akkaHttpSpray,
-  kafkaClients,
+
   akkaSlf4j,
   logback,
-  alpakkaKafka,
+
+  opencensus,
+  opencensusExporterPrometheus,
+  prometheusClientHttpServer,
+
   scalaPb
 )
 

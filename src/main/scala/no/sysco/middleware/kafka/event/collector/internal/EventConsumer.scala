@@ -22,7 +22,7 @@ object EventConsumer {
 /**
  * Consume Collector events.
  *
- * @param collector Reference to Collector, which consume this events.
+ * @param collectorManager Reference to Collector Manager, which consume this events.
  */
 class EventConsumer(collectorManager: ActorRef, bootstrapServers: String, eventTopic: String)(implicit materializer: ActorMaterializer, executionContext: ExecutionContext)
   extends Actor with ActorLogging {

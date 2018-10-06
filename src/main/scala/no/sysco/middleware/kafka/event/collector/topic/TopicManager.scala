@@ -4,6 +4,9 @@ import java.time.Duration
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.stream.ActorMaterializer
+import io.opencensus.scala.Stats
+import io.opencensus.scala.stats.Measurement
+import no.sysco.middleware.kafka.event.collector.internal.Parser
 import no.sysco.middleware.kafka.event.collector.model._
 import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent }
 
@@ -28,6 +31,7 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
 
   import TopicManager._
   import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
+  import no.sysco.middleware.kafka.event.collector.metrics.Metrics._
 
   var topicsAndDescription: Map[String, Option[TopicDescription]] = Map()
 
@@ -41,9 +45,11 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
     currentNames match {
       case Nil =>
       case name :: ns =>
-        if (!names.contains(name))
+        if (!names.contains(name)) {
+          Stats.record(List(topicTypeTag, deletedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
           eventProducer ! TopicEvent(name, TopicEvent.Event.TopicDeleted(TopicDeleted()))
-        evaluateCurrentTopics(ns, names)
+          evaluateCurrentTopics(ns, names)
+        }
     }
   }
 
@@ -52,6 +58,7 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
     case name :: names =>
       name match {
         case n if !topicsAndDescription.keys.exists(_.equals(n)) =>
+          Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
           eventProducer ! TopicEvent(name, TopicEvent.Event.TopicCreated(TopicCreated()))
         case n if topicsAndDescription.keys.exists(_.equals(n)) =>
           eventRepository ! DescribeTopic(name)
@@ -63,13 +70,15 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
     log.info("Handling topic {} event.", topicEvent.name)
     topicEvent.event match {
       case event if event.isTopicCreated =>
+        Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicCreated match {
           case Some(_) =>
-            eventRepository ! DescribeTopic(topicEvent.name)
             topicsAndDescription = topicsAndDescription + (topicEvent.name -> None)
+            eventRepository ! DescribeTopic(topicEvent.name)
           case None =>
         }
       case event if event.isTopicUpdated =>
+        Stats.record(List(topicTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicUpdated match {
           case Some(topicUpdated) =>
             val topicDescription = Some(Parser.fromPb(topicEvent.name, topicUpdated.topicDescription.get))
@@ -77,6 +86,7 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
           case None =>
         }
       case event if event.isTopicDeleted =>
+        Stats.record(List(topicTypeTag, deletedOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicDeleted match {
           case Some(_) =>
             topicsAndDescription = topicsAndDescription - topicEvent.name
@@ -86,14 +96,17 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
   }
 
   def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = topicDescribed.topicAndDescription match {
-    case (name: String, description: TopicDescription) =>
-      log.info("Handling topic {} described.", name)
-      topicsAndDescription(name) match {
+    case (topicName: String, topicDescription: TopicDescription) =>
+      log.info("Handling topic {} described.", topicName)
+      topicsAndDescription(topicName) match {
         case None =>
-          eventProducer ! TopicEvent(name, TopicEvent.Event.TopicUpdated(Parser.toPb(description)))
+          Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+          eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
         case Some(current) =>
-          if (!current.equals(description))
-            eventProducer ! TopicEvent(name, TopicEvent.Event.TopicUpdated(Parser.toPb(description)))
+          if (!current.equals(topicDescription)) {
+            Stats.record(List(topicTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+            eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
+          }
       }
   }
 
