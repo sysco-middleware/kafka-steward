@@ -1,6 +1,6 @@
 package no.sysco.middleware.kafka.event.collector.internal
 
-import no.sysco.middleware.kafka.event.collector.model.{Node, Partition, TopicDescription}
+import no.sysco.middleware.kafka.event.collector.model.{ Node, Partition, TopicDescription }
 import no.sysco.middleware.kafka.event.proto
 import org.apache.kafka.clients.admin
 import org.apache.kafka.common
@@ -37,9 +37,9 @@ object Parser {
 
   def fromPb(node: proto.collector.Node): Node =
     Node(node.id, node.host, node.port, node.rack match {
-      case null => None
+      case null           => None
       case s if s.isEmpty => None
-      case s => Some(s)
+      case s              => Some(s)
     })
 
   def toPb(topicDescription: TopicDescription): proto.collector.TopicUpdated =
