@@ -5,7 +5,7 @@ import java.time.Duration
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.stream.ActorMaterializer
 import no.sysco.middleware.kafka.event.collector.model._
-import no.sysco.middleware.kafka.event.proto.collector.{TopicCreated, TopicDeleted, TopicEvent}
+import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent }
 
 import scala.concurrent.ExecutionContext
 
