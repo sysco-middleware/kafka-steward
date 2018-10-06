@@ -2,8 +2,8 @@ package no.sysco.middleware.kafka.event.collector.cluster
 
 import java.time.Duration
 
-import akka.actor.{Actor, ActorRef, Props}
-import no.sysco.middleware.kafka.event.collector.model.{Cluster, ClusterDescribed, NodesDescribed, Parser}
+import akka.actor.{ Actor, ActorRef, Props }
+import no.sysco.middleware.kafka.event.collector.model.{ Cluster, ClusterDescribed, NodesDescribed, Parser }
 import no.sysco.middleware.kafka.event.proto.collector._
 
 import scala.concurrent.ExecutionContext
@@ -16,12 +16,12 @@ object ClusterManager {
 }
 
 /**
-  * Manage Cluster state.
-  *
-  * @param pollInterval    How often to query Cluster state.
-  * @param eventRepository Reference to repository where to query.
-  * @param eventProducer   Reference to producer, to publish events.
-  */
+ * Manage Cluster state.
+ *
+ * @param pollInterval    How often to query Cluster state.
+ * @param eventRepository Reference to repository where to query.
+ * @param eventProducer   Reference to producer, to publish events.
+ */
 class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit executionContext: ExecutionContext)
   extends Actor {
 

@@ -11,9 +11,9 @@ object NodeManager {
 }
 
 /**
-  * Manage Cluster Nodes state.
-  * @param eventProducer Reference to producer, to publish events.
-  */
+ * Manage Cluster Nodes state.
+ * @param eventProducer Reference to producer, to publish events.
+ */
 class NodeManager(eventProducer: ActorRef) extends Actor {
 
   import NodeManager._
