@@ -1,6 +1,6 @@
 package no.sysco.middleware.kafka.event.collector.internal
 
-import akka.actor.{ Actor, ActorRef, Props }
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.kafka.scaladsl.Consumer
 import akka.kafka.{ ConsumerSettings, Subscriptions }
 import akka.stream.scaladsl.{ Keep, Sink }
@@ -25,7 +25,7 @@ object EventConsumer {
  * @param collector Reference to Collector, which consume this events.
  */
 class EventConsumer(collectorManager: ActorRef, bootstrapServers: String, eventTopic: String)(implicit materializer: ActorMaterializer, executionContext: ExecutionContext)
-  extends Actor {
+  extends Actor with ActorLogging {
 
   val consumerSettings: ConsumerSettings[String, Array[Byte]] =
     ConsumerSettings(context.system, new StringDeserializer, new ByteArrayDeserializer)
