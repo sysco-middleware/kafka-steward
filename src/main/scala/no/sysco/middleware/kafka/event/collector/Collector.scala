@@ -1,11 +1,16 @@
 package no.sysco.middleware.kafka.event.collector
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
+import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import no.sysco.middleware.kafka.event.collector.cluster.ClusterManager
+import no.sysco.middleware.kafka.event.collector.cluster.ClusterManager.GetCluster
+import no.sysco.middleware.kafka.event.collector.cluster.NodeManager.ListNodes
+import no.sysco.middleware.kafka.event.collector.http.HttpCollectorQueryService
 import no.sysco.middleware.kafka.event.collector.internal.{ EventConsumer, EventProducer, EventRepository }
 import no.sysco.middleware.kafka.event.collector.topic.TopicManager
+import no.sysco.middleware.kafka.event.collector.topic.TopicManager.ListTopics
 import no.sysco.middleware.kafka.event.proto.collector.{ CollectorEvent, ClusterEvent, NodeEvent, TopicEvent }
 
 import scala.concurrent.ExecutionContext
@@ -14,13 +19,23 @@ import scala.concurrent.ExecutionContext
  * Application entry point.
  */
 object Collector extends App {
+
   implicit val actorSystem: ActorSystem = ActorSystem("collector-system")
   implicit val actorMaterializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: ExecutionContext = actorSystem.dispatcher
 
   def props(): Props = Props(new Collector())
 
-  actorSystem.actorOf(props(), "collector")
+  val collector = actorSystem.actorOf(props(), "collector")
+
+  val httpCollectorQueryService = new HttpCollectorQueryService(collector)
+
+  val bindingFuture = Http().bindAndHandle(httpCollectorQueryService.route, "0.0.0.0", 8080)
+
+  sys.addShutdownHook(
+    bindingFuture
+      .flatMap(_.unbind())
+      .onComplete(_ => actorSystem.terminate()))
 }
 
 /**
