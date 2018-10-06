@@ -22,28 +22,20 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
   import NodeManager._
   import no.sysco.middleware.kafka.event.collector.metrics.Metrics._
 
-  var nodes: Map[Int, Node] = Map()
+  var nodes: Map[String, Node] = Map()
 
   private def evaluateNodesDescribed(listedNodes: List[Node]): Unit = {
     listedNodes match {
       case Nil =>
       case node :: ns =>
-        nodes.get(node.id) match {
+        nodes.get(String.valueOf(node.id)) match {
           case None =>
             Stats.record(List(nodeTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
-            eventProducer !
-              NodeEvent(
-                node.id,
-                NodeEvent.Event.NodeCreated(
-                  NodeCreated(Some(Parser.toPb(node)))))
-          case Some(currentNode) =>
-            if (!currentNode.equals(node)) {
+            eventProducer ! NodeEvent(node.id, NodeEvent.Event.NodeCreated(NodeCreated(Some(Parser.toPb(node)))))
+          case Some(thisNode) =>
+            if (!thisNode.equals(node)) {
               Stats.record(List(nodeTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
-              eventProducer !
-                NodeEvent(
-                  node.id,
-                  NodeEvent.Event.NodeUpdated(
-                    NodeUpdated(Some(Parser.toPb(node)))))
+              eventProducer ! NodeEvent(node.id, NodeEvent.Event.NodeUpdated(NodeUpdated(Some(Parser.toPb(node)))))
             }
         }
         evaluateNodesDescribed(ns)
@@ -74,14 +66,14 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
         Stats.record(List(nodeTypeTag, createdOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
         event.nodeCreated match {
           case Some(nodeCreated) =>
-            nodes = nodes + (nodeEvent.id -> Parser.fromPb(nodeCreated.getNode))
+            nodes = nodes + (String.valueOf(nodeEvent.id) -> Parser.fromPb(nodeCreated.getNode))
           case None =>
         }
       case event if event.isNodeUpdated =>
         Stats.record(List(nodeTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
         event.nodeUpdated match {
           case Some(nodeUpdated) =>
-            nodes = nodes + (nodeEvent.id -> Parser.fromPb(nodeUpdated.getNode))
+            nodes = nodes + (String.valueOf(nodeEvent.id) -> Parser.fromPb(nodeUpdated.getNode))
           case None =>
         }
     }

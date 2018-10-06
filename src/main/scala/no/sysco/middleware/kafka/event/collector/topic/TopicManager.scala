@@ -96,16 +96,16 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
   }
 
   def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = topicDescribed.topicAndDescription match {
-    case (name: String, description: TopicDescription) =>
-      log.info("Handling topic {} described.", name)
-      topicsAndDescription(name) match {
+    case (topicName: String, topicDescription: TopicDescription) =>
+      log.info("Handling topic {} described.", topicName)
+      topicsAndDescription(topicName) match {
         case None =>
           Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
-          eventProducer ! TopicEvent(name, TopicEvent.Event.TopicUpdated(Parser.toPb(description)))
+          eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
         case Some(current) =>
-          if (!current.equals(description)) {
+          if (!current.equals(topicDescription)) {
             Stats.record(List(topicTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
-            eventProducer ! TopicEvent(name, TopicEvent.Event.TopicUpdated(Parser.toPb(description)))
+            eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
           }
       }
   }

@@ -56,21 +56,15 @@ class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventPro
     }
     cluster match {
       case None =>
+        Stats.record(List(clusterTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
         cluster = Some(Cluster(clusterDescribed.id, clusterDescribed.controller))
-        eventProducer !
-          Stats.record(List(clusterTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
-        ClusterEvent(
-          clusterDescribed.id,
-          ClusterEvent.Event.ClusterCreated(ClusterCreated(controller)))
-      case Some(current) =>
-        val other = Cluster(clusterDescribed.id, clusterDescribed.controller)
-        if (!current.equals(other)) {
+        eventProducer ! ClusterEvent(clusterDescribed.id, ClusterEvent.Event.ClusterCreated(ClusterCreated(controller)))
+      case Some(thisCluster) =>
+        val thatCluster = Cluster(clusterDescribed.id, clusterDescribed.controller)
+        if (!thisCluster.equals(thatCluster)) {
           Stats.record(List(clusterTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
           cluster = Some(Cluster(clusterDescribed.id, clusterDescribed.controller))
-          eventProducer !
-            ClusterEvent(
-              clusterDescribed.id,
-              ClusterEvent.Event.ClusterUpdated(ClusterUpdated(controller)))
+          eventProducer ! ClusterEvent(clusterDescribed.id, ClusterEvent.Event.ClusterUpdated(ClusterUpdated(controller)))
         }
     }
     nodeManager ! NodesDescribed(clusterDescribed.nodes)
