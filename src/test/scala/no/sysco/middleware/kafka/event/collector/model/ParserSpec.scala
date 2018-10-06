@@ -1,5 +1,6 @@
 package no.sysco.middleware.kafka.event.collector.model
 
+import no.sysco.middleware.kafka.event.collector.internal.Parser
 import no.sysco.middleware.kafka.event.proto
 import org.apache.kafka
 import org.scalatest.FlatSpec

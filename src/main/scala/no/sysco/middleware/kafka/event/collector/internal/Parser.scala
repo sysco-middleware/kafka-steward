@@ -1,5 +1,6 @@
-package no.sysco.middleware.kafka.event.collector.model
+package no.sysco.middleware.kafka.event.collector.internal
 
+import no.sysco.middleware.kafka.event.collector.model.{Node, Partition, TopicDescription}
 import no.sysco.middleware.kafka.event.proto
 import org.apache.kafka.clients.admin
 import org.apache.kafka.common
