@@ -54,21 +54,21 @@ class Collector(implicit actorSystem: ActorSystem, actorMaterializer: ActorMater
 
   private def handleClusterEvent(clusterEvent: Option[ClusterEvent]): Unit = {
     clusterEvent match {
-      case Some(clusterEventValue) => clusterManager ! clusterEventValue
+      case Some(clusterEventValue) => clusterEventCollector ! clusterEventValue
       case None                    =>
     }
   }
 
   private def handleNodeEvent(nodeEvent: Option[NodeEvent]): Unit = {
     nodeEvent match {
-      case Some(nodeEventValue) => clusterManager ! nodeEventValue
+      case Some(nodeEventValue) => clusterEventCollector ! nodeEventValue
       case None                 =>
     }
   }
 
   private def handleTopicEvent(topicEvent: Option[TopicEvent]): Unit = {
     topicEvent match {
-      case Some(topicEventValue) => topicManager ! topicEventValue
+      case Some(topicEventValue) => topicEventCollector ! topicEventValue
       case None                  =>
     }
   }

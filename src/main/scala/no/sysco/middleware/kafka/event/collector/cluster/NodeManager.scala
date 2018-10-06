@@ -1,8 +1,8 @@
 package no.sysco.middleware.kafka.event.collector.cluster
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import no.sysco.middleware.kafka.event.collector.model._
-import no.sysco.middleware.kafka.event.proto.collector.{NodeCreated, NodeEvent, NodeUpdated}
+import no.sysco.middleware.kafka.event.proto.collector.{ NodeCreated, NodeEvent, NodeUpdated }
 
 object NodeManager {
   def props(eventProducer: ActorRef): Props = Props(new NodeManager(eventProducer))

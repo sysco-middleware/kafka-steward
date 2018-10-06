@@ -2,8 +2,8 @@ package no.sysco.middleware.kafka.event.collector.cluster
 
 import java.time.Duration
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import no.sysco.middleware.kafka.event.collector.model.{Cluster, ClusterDescribed, NodesDescribed, Parser}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import no.sysco.middleware.kafka.event.collector.model.{ Cluster, ClusterDescribed, NodesDescribed, Parser }
 import no.sysco.middleware.kafka.event.proto.collector._
 
 import scala.concurrent.ExecutionContext
