@@ -1,8 +1,9 @@
 package no.sysco.middleware.kafka.event.collector.internal
 
 import java.util.Properties
+import java.util.concurrent.TimeUnit
 
-import akka.actor.{ Actor, Props }
+import akka.actor.{ Actor, ActorLogging, Props }
 import no.sysco.middleware.kafka.event.proto.collector.{ ClusterEvent, CollectorEvent, NodeEvent, TopicEvent }
 import org.apache.kafka.clients.producer.{ KafkaProducer, Producer, ProducerConfig, ProducerRecord }
 import org.apache.kafka.common.serialization.{ ByteArraySerializer, StringSerializer }
@@ -24,9 +25,11 @@ object EventProducer {
 /**
  * Publish Cluster events.
  */
-class EventProducer(eventTopic: String, producer: Producer[String, Array[Byte]]) extends Actor {
+class EventProducer(eventTopic: String, producer: Producer[String, Array[Byte]])
+  extends Actor with ActorLogging {
 
   def handleEvent(event: CollectorEvent): Unit = {
+    log.info("Handling collector event {}-{}.", event.entityType, event.entityId)
     val byteArray = event.toByteArray
     producer.send(
       new ProducerRecord(
@@ -35,7 +38,9 @@ class EventProducer(eventTopic: String, producer: Producer[String, Array[Byte]])
         byteArray))
   }
 
-  override def receive: Receive = {
+  override def postStop(): Unit = producer.close(1, TimeUnit.SECONDS)
+
+  override def receive(): Receive = {
     case event: CollectorEvent => handleEvent(event)
     case clusterEvent: ClusterEvent =>
       self !
@@ -56,6 +61,4 @@ class EventProducer(eventTopic: String, producer: Producer[String, Array[Byte]])
           topicEvent.name,
           CollectorEvent.Value.TopicEvent(topicEvent))
   }
-
-  override def postStop(): Unit = producer.close()
 }

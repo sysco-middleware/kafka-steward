@@ -2,7 +2,7 @@ package no.sysco.middleware.kafka.event.collector.cluster
 
 import java.time.Duration
 
-import akka.actor.{ Actor, ActorRef, Props }
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import no.sysco.middleware.kafka.event.collector.model.{ Cluster, ClusterDescribed, NodesDescribed, Parser }
 import no.sysco.middleware.kafka.event.proto.collector._
 
@@ -23,22 +23,28 @@ object ClusterManager {
  * @param eventProducer   Reference to producer, to publish events.
  */
 class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit executionContext: ExecutionContext)
-  extends Actor {
+  extends Actor with ActorLogging {
 
   import ClusterManager._
   import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
 
-  val nodeManager: ActorRef = context.actorOf(NodeManager.props(eventRepository))
+  val nodeManager: ActorRef = context.actorOf(NodeManager.props(eventRepository), "node-manager")
 
   var cluster: Option[Cluster] = None
 
   def handleDescribeCluster(): Unit = {
+    log.info("Handling describe cluster command.")
     eventRepository ! DescribeCluster()
 
+    scheduleDescribeCluster
+  }
+
+  private def scheduleDescribeCluster = {
     context.system.scheduler.scheduleOnce(pollInterval, () => self ! DescribeCluster())
   }
 
   def handleClusterDescribed(clusterDescribed: ClusterDescribed): Unit = {
+    log.info("Handling cluster {} described event.", clusterDescribed.id)
     val controller: Option[Node] = clusterDescribed.controller match {
       case Some(c) => Some(Parser.toPb(c))
       case None    => None
@@ -61,6 +67,7 @@ class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventPro
   }
 
   def handleClusterEvent(clusterEvent: ClusterEvent): Unit = {
+    log.info("Handling cluster {} event.", clusterEvent.id)
     clusterEvent.event match {
       case event if event.isClusterCreated =>
         event.clusterCreated match {
@@ -87,11 +94,11 @@ class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventPro
 
   def handleGetCluster(): Unit = sender() ! cluster
 
-  def handleNodeEvent(nodeEvent: NodeEvent): Unit = nodeManager ! nodeEvent
+  def handleNodeEvent(nodeEvent: NodeEvent): Unit = nodeManager forward nodeEvent
 
-  override def preStart(): Unit = self ! DescribeCluster()
+  override def preStart(): Unit = scheduleDescribeCluster
 
-  override def receive: Receive = {
+  override def receive(): Receive = {
     case DescribeCluster()                  => handleDescribeCluster()
     case clusterDescribed: ClusterDescribed => handleClusterDescribed(clusterDescribed)
     case clusterEvent: ClusterEvent         => handleClusterEvent(clusterEvent)

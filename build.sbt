@@ -17,7 +17,7 @@ libraryDependencies ++= Seq(
   akkaStreams,
   kafkaClients,
   akkaSlf4j,
-  akkaSlf4jLogback,
+  logback,
   alpakkaKafka,
   scalaPb
 )

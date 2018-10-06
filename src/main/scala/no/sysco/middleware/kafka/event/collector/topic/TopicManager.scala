@@ -2,7 +2,7 @@ package no.sysco.middleware.kafka.event.collector.topic
 
 import java.time.Duration
 
-import akka.actor.{ Actor, ActorRef, Props }
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.stream.ActorMaterializer
 import no.sysco.middleware.kafka.event.collector.model._
 import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent }
@@ -24,14 +24,20 @@ object TopicManager {
  * @param eventProducer   Reference to Events producer, to publish events.
  */
 class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, val executionContext: ExecutionContext)
-  extends Actor {
+  extends Actor with ActorLogging {
 
   import TopicManager._
   import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
 
   var topicsAndDescription: Map[String, Option[TopicDescription]] = Map()
 
-  def evaluateCurrentTopics(currentNames: List[String], names: List[String]): Unit = {
+  def handleTopicsCollected(topicsCollected: TopicsCollected): Unit = {
+    log.info(s"Handling ${topicsCollected.names.size} topics collected.")
+    evaluateCurrentTopics(topicsAndDescription.keys.toList, topicsCollected.names)
+    evaluateTopicsCollected(topicsCollected.names)
+  }
+
+  private def evaluateCurrentTopics(currentNames: List[String], names: List[String]): Unit = {
     currentNames match {
       case Nil =>
       case name :: ns =>
@@ -41,12 +47,7 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
     }
   }
 
-  def handleTopicsCollected(topicsCollected: TopicsCollected): Unit = {
-    evaluateCurrentTopics(topicsAndDescription.keys.toList, topicsCollected.names)
-    evaluateTopicsCollected(topicsCollected.names)
-  }
-
-  def evaluateTopicsCollected(topicNames: List[String]): Unit = topicNames match {
+  private def evaluateTopicsCollected(topicNames: List[String]): Unit = topicNames match {
     case Nil =>
     case name :: names =>
       name match {
@@ -58,7 +59,8 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
       evaluateTopicsCollected(names)
   }
 
-  def handleTopicEvent(topicEvent: TopicEvent): Unit =
+  def handleTopicEvent(topicEvent: TopicEvent): Unit = {
+    log.info("Handling topic {} event.", topicEvent.name)
     topicEvent.event match {
       case event if event.isTopicCreated =>
         event.topicCreated match {
@@ -81,9 +83,11 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
           case None =>
         }
     }
+  }
 
   def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = topicDescribed.topicAndDescription match {
     case (name: String, description: TopicDescription) =>
+      log.info("Handling topic {} described.", name)
       topicsAndDescription(name) match {
         case None =>
           eventProducer ! TopicEvent(name, TopicEvent.Event.TopicUpdated(Parser.toPb(description)))
@@ -94,23 +98,25 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
   }
 
   def handleCollectTopics(): Unit = {
+    log.info("Handling collect topics command.")
     eventRepository ! CollectTopics()
 
+    scheduleCollectTopics
+  }
+
+  private def scheduleCollectTopics = {
     context.system.scheduler.scheduleOnce(pollInterval, () => self ! CollectTopics())
   }
 
-  def handleListTopics(): Unit =
-    sender() ! Topics(topicsAndDescription)
+  def handleListTopics(): Unit = sender() ! Topics(topicsAndDescription)
 
-  override def preStart(): Unit = self ! CollectTopics()
+  override def preStart(): Unit = scheduleCollectTopics
 
-  override def receive: Receive = {
+  override def receive(): Receive = {
     case topicsCollected: TopicsCollected => handleTopicsCollected(topicsCollected)
     case topicDescribed: TopicDescribed   => handleTopicDescribed(topicDescribed)
     case topicEvent: TopicEvent           => handleTopicEvent(topicEvent)
     case CollectTopics()                  => handleCollectTopics()
     case ListTopics()                     => handleListTopics()
   }
-
-  override def postStop(): Unit = super.postStop()
 }
