@@ -1,11 +1,11 @@
 sudo: required
 language: scala
 scala:
-- 2.12.6
+  - 2.12.6
 jdk: oraclejdk8
 
 services:
-- docker
+  - docker
 
 env:
   matrix:
@@ -18,8 +18,7 @@ deploy:
   provider: script
   script: sbt docker:publish
   on:
-    all_branches: true
-#    branch: master
+    branch: master
 
 before_cache:
   # Tricks to avoid unnecessary cache updates
@@ -28,5 +27,5 @@ before_cache:
 
 cache:
   directories:
-  - $HOME/.ivy2/cache
-  - $HOME/.sbt
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
