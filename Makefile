@@ -12,3 +12,7 @@ test:
 .PHONY: docker-build
 docker-build:
 	sbt docker:publishLocal
+
+.PHONY: release
+release:
+	sbt release
