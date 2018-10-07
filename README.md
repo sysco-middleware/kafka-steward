@@ -5,7 +5,9 @@
 There are many events happening on a Kafka Cluster, as Topics updated, Brokers added to the Cluster, and so on.
 This module is designed to expose those events in a Kafka Topics so it can be consumed by other parties.
 
-## How to run it
+## How to use it
+
+Protocol to consume these events, following Protocol Buffer format is [documented here](https://github.com/sysco-middleware/kafka-event-collector/wiki/Protocol).
 
 To run this application has 4 parameters to configure:
 
