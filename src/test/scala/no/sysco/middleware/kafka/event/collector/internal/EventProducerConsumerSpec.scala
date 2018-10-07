@@ -2,10 +2,10 @@ package no.sysco.middleware.kafka.event.collector.internal
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
-import net.manub.embeddedkafka.{ EmbeddedKafka, EmbeddedKafkaConfig }
-import no.sysco.middleware.kafka.event.proto.collector.{ CollectorEvent, TopicCreated, TopicEvent }
-import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
+import no.sysco.middleware.kafka.event.proto.collector.{CollectorEvent, TopicCreated, TopicEvent}
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -42,10 +42,7 @@ class EventProducerConsumerSpec
           CollectorEvent(
             CollectorEvent.EntityType.TOPIC,
             "test",
-            CollectorEvent.Value.TopicEvent(
-              TopicEvent(
-                "test",
-                TopicEvent.Event.TopicCreated(TopicCreated()))))
+            CollectorEvent.Value.TopicEvent(TopicEvent("test", TopicEvent.Event.TopicCreated(TopicCreated()))))
         eventProducer ! event
 
         val eventReceived = probe.expectMsgType[CollectorEvent](10 seconds)

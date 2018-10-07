@@ -49,7 +49,6 @@ class EventRepositorySpec
               new NewTopic("test-3", 1, 1),
             ).asJava).all().get()
 
-
         repo ! CollectTopics()
         val topicsCollected: TopicsCollected = expectMsgType[TopicsCollected]
         assert(topicsCollected.names.size == 3)

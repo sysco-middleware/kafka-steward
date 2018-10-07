@@ -31,11 +31,9 @@ class EventProducer(eventTopic: String, producer: Producer[String, Array[Byte]])
   def handleEvent(event: CollectorEvent): Unit = {
     log.info("Handling collector event {}-{}.", event.entityType, event.entityId)
     val byteArray = event.toByteArray
-    producer.send(
-      new ProducerRecord(
-        eventTopic,
-        s"${event.entityType}-${event.entityId}",
-        byteArray))
+    val record = new ProducerRecord(eventTopic, s"${event.entityType}-${event.entityId}", byteArray)
+    record.headers().add("entity_type", event.entityType.name.getBytes)
+    producer.send(record)
   }
 
   override def postStop(): Unit = producer.close(1, TimeUnit.SECONDS)
