@@ -13,8 +13,12 @@ import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDele
 import scala.concurrent.ExecutionContext
 
 object TopicManager {
-  def props(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, executionContext: ExecutionContext) =
-    Props(new TopicManager(pollInterval, eventRepository, eventProducer))
+  def props(
+    pollInterval: Duration,
+    includeInternalTopics: Boolean,
+    eventRepository: ActorRef,
+    eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, executionContext: ExecutionContext) =
+    Props(new TopicManager(pollInterval, includeInternalTopics, eventRepository, eventProducer))
 
   case class ListTopics()
 }
@@ -26,7 +30,7 @@ object TopicManager {
  * @param eventRepository Reference to Repository where events are stored.
  * @param eventProducer   Reference to Events producer, to publish events.
  */
-class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, val executionContext: ExecutionContext)
+class TopicManager(pollInterval: Duration, includeInternalTopics: Boolean, eventRepository: ActorRef, eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, val executionContext: ExecutionContext)
   extends Actor with ActorLogging {
 
   import TopicManager._
@@ -95,20 +99,30 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
     }
   }
 
-  def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = topicDescribed.topicAndDescription match {
-    case (topicName: String, topicDescription: TopicDescription) =>
-      log.info("Handling topic {} described.", topicName)
-      topicsAndDescription(topicName) match {
-        case None =>
-          Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
-          eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
-        case Some(current) =>
-          if (!current.equals(topicDescription)) {
-            Stats.record(List(topicTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+  def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = {
+    log.info("Handling topic: {} , internal: {}", topicDescribed.topicAndDescription._1, topicDescribed.topicAndDescription._2.internal)
+    val filteredTopicDescribed = filterInternalTopic(topicDescribed).map(desc => desc.topicAndDescription).getOrElse(None)
+
+    filteredTopicDescribed match {
+      case (topicName: String, topicDescription: TopicDescription) =>
+        topicsAndDescription(topicName) match {
+          case None =>
+            Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
             eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
-          }
-      }
+          case Some(current) =>
+            if (!current.equals(topicDescription)) {
+              Stats.record(List(topicTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+              eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
+            }
+        }
+      // remove from list
+      case None => topicsAndDescription = topicsAndDescription - topicDescribed.topicAndDescription._1
+    }
+
   }
+
+  private def filterInternalTopic(topicDescribed: TopicDescribed): Option[TopicDescribed] =
+    if (topicDescribed.topicAndDescription._2.internal == includeInternalTopics) Option(topicDescribed) else Option.empty
 
   def handleCollectTopics(): Unit = {
     log.info("Handling collect topics command.")

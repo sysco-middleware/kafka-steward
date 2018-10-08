@@ -29,7 +29,8 @@ class CollectorManager(implicit actorSystem: ActorSystem, actorMaterializer: Act
   val eventRepository: ActorRef = context.actorOf(EventRepository.props(config.Kafka.bootstrapServers), "event-repository")
 
   val clusterEventCollector: ActorRef = context.actorOf(ClusterManager.props(config.Collector.clusterPollInterval, eventRepository, eventProducer), "cluster-manager")
-  val topicEventCollector: ActorRef = context.actorOf(TopicManager.props(config.Collector.topicPollInterval, eventRepository, eventProducer), "topic-manager")
+  val topicEventCollector: ActorRef =
+    context.actorOf(TopicManager.props(config.Collector.topicPollInterval, config.Collector.includeInternalTopics, eventRepository, eventProducer), "topic-manager")
 
   val eventConsumer: ActorRef = context.actorOf(EventConsumer.props(self, config.Kafka.bootstrapServers, config.Collector.eventTopic), "event-consumer")
 
