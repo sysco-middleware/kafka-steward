@@ -99,30 +99,53 @@ class TopicManager(pollInterval: Duration, includeInternalTopics: Boolean, event
     }
   }
 
-  def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = {
-    log.info("Handling topic: {} , internal: {}", topicDescribed.topicAndDescription._1, topicDescribed.topicAndDescription._2.internal)
-    val filteredTopicDescribed = filterInternalTopic(topicDescribed).map(desc => desc.topicAndDescription).getOrElse(None)
+  //  def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = {
+  //    log.info("Handling topic: {} , internal: {}", topicDescribed.topicAndDescription._1, topicDescribed.topicAndDescription._2.internal)
+  //    val filteredTopicDescribed = filterInternalTopic(topicDescribed).map(desc => desc.topicAndDescription).getOrElse(None)
+  //
+  //    filteredTopicDescribed match {
+  //      case (topicName: String, topicDescription: TopicDescription) =>
+  //        topicsAndDescription(topicName) match {
+  //          case None =>
+  //            Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+  //            eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
+  //          case Some(current) =>
+  //            if (!current.equals(topicDescription)) {
+  //              Stats.record(List(topicTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+  //              eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
+  //            }
+  //        }
+  //      // remove from list
+  //      case None => topicsAndDescription = topicsAndDescription - topicDescribed.topicAndDescription._1
+  //    }
+  //  }
 
-    filteredTopicDescribed match {
-      case (topicName: String, topicDescription: TopicDescription) =>
-        topicsAndDescription(topicName) match {
-          case None =>
-            Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
-            eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
-          case Some(current) =>
-            if (!current.equals(topicDescription)) {
-              Stats.record(List(topicTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
-              eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
-            }
+  def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = topicDescribed.topicAndDescription match {
+    case (topicName: String, topicDescription: TopicDescription) =>
+      log.info("Handling topic {} described.", topicName)
+
+      if (!includeInternalTopics) {
+        if (topicDescription.internal) {
+          log.warning("Internal topic excluded: {}", topicName)
+          return
         }
-      // remove from list
-      case None => topicsAndDescription = topicsAndDescription - topicDescribed.topicAndDescription._1
-    }
+      }
 
+      topicsAndDescription(topicName) match {
+        case None =>
+          Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+          eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
+        case Some(current) =>
+          if (!current.equals(topicDescription)) {
+            Stats.record(List(topicTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+            eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
+          }
+      }
   }
 
-  private def filterInternalTopic(topicDescribed: TopicDescribed): Option[TopicDescribed] =
-    if (topicDescribed.topicAndDescription._2.internal == includeInternalTopics) Option(topicDescribed) else Option.empty
+//  private def filterInternalTopic(topicDescribed: TopicDescribed): Option[TopicDescribed] = {
+//    if (topicDescribed.topicAndDescription._2.internal == includeInternalTopics) Option(topicDescribed) else Option.empty
+//  }
 
   def handleCollectTopics(): Unit = {
     log.info("Handling collect topics command.")
