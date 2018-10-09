@@ -7,8 +7,8 @@ import no.sysco.middleware.kafka.event.collector.internal.Parser
 import no.sysco.middleware.kafka.event.collector.model._
 import no.sysco.middleware.kafka.event.proto.collector.{ NodeCreated, NodeEvent, NodeUpdated }
 
-object NodeManager {
-  def props(eventProducer: ActorRef): Props = Props(new NodeManager(eventProducer))
+object BrokerManager {
+  def props(eventProducer: ActorRef): Props = Props(new BrokerManager(eventProducer))
 
   case class ListNodes()
 }
@@ -17,12 +17,12 @@ object NodeManager {
  * Manage Cluster Nodes state.
  * @param eventProducer Reference to producer, to publish events.
  */
-class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
+class BrokerManager(eventProducer: ActorRef) extends Actor with ActorLogging {
 
-  import NodeManager._
+  import BrokerManager._
   import no.sysco.middleware.kafka.event.collector.metrics.Metrics._
 
-  var nodes: Map[String, Node] = Map()
+  var brokers: Map[String, Broker] = Map()
 
   override def receive(): Receive = {
     case nodesDescribed: NodesDescribed => handleNodesDescribed(nodesDescribed)
@@ -32,12 +32,12 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
 
   def handleNodesDescribed(nodesDescribed: NodesDescribed): Unit = {
     log.info("Handling {} nodes described event.", nodesDescribed.nodes.size)
-    evaluateCurrentNodes(nodes.values.toList, nodesDescribed.nodes)
+    evaluateCurrentNodes(brokers.values.map(_.node).toList, nodesDescribed.nodes)
     evaluateNodesDescribed(nodesDescribed.nodes)
   }
 
-  private def evaluateCurrentNodes(currentNodes: List[Node], nodes: List[Node]): Unit = {
-    currentNodes match {
+  private def evaluateCurrentNodes(currentBrokers: List[Node], nodes: List[Node]): Unit = {
+    currentBrokers match {
       case Nil =>
       case node :: ns =>
         if (!nodes.contains(node)) {
@@ -51,14 +51,14 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
     listedNodes match {
       case Nil =>
       case node :: ns =>
-        nodes.get(String.valueOf(node.id)) match {
+        brokers.get(String.valueOf(node.id)) match {
           case None =>
             Stats.record(
               List(nodeTypeTag, createdOperationTypeTag),
               Measurement.double(totalMessageProducedMeasure, 1))
             eventProducer ! NodeEvent(node.id, NodeEvent.Event.NodeCreated(NodeCreated(Some(Parser.toPb(node)))))
-          case Some(thisNode) =>
-            if (!thisNode.equals(node)) {
+          case Some(thisBroker) =>
+            if (!thisBroker.node.equals(node)) {
               Stats.record(
                 List(nodeTypeTag, updatedOperationTypeTag),
                 Measurement.double(totalMessageProducedMeasure, 1))
@@ -71,6 +71,7 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
 
   def handleNodeEvent(nodeEvent: NodeEvent): Unit = {
     log.info("Handling node {} event.", nodeEvent.id)
+    val brokerId = String.valueOf(nodeEvent.id)
     nodeEvent.event match {
       case event if event.isNodeCreated =>
         Stats.record(
@@ -78,7 +79,7 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
           Measurement.double(totalMessageConsumedMeasure, 1))
         event.nodeCreated match {
           case Some(nodeCreated) =>
-            nodes = nodes + (String.valueOf(nodeEvent.id) -> Parser.fromPb(nodeCreated.getNode))
+            brokers = brokers + (brokerId -> Broker(brokerId, Parser.fromPb(nodeCreated.getNode)))
           case None =>
         }
       case event if event.isNodeUpdated =>
@@ -87,12 +88,12 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
           Measurement.double(totalMessageConsumedMeasure, 1))
         event.nodeUpdated match {
           case Some(nodeUpdated) =>
-            nodes = nodes + (String.valueOf(nodeEvent.id) -> Parser.fromPb(nodeUpdated.getNode))
+            brokers = brokers + (brokerId -> Broker(brokerId, Parser.fromPb(nodeUpdated.getNode)))
           case None =>
         }
     }
   }
 
-  def handleListNodes(): Unit = sender() ! Nodes(nodes)
+  def handleListNodes(): Unit = sender() ! Brokers(brokers.values.toList)
 
 }

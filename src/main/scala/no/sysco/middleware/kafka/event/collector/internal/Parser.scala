@@ -1,6 +1,6 @@
 package no.sysco.middleware.kafka.event.collector.internal
 
-import no.sysco.middleware.kafka.event.collector.model.{ Node, Partition, TopicDescription }
+import no.sysco.middleware.kafka.event.collector.model.{ Config, Node, Partition, TopicDescription }
 import no.sysco.middleware.kafka.event.proto
 import org.apache.kafka.clients.admin
 import org.apache.kafka.common
@@ -23,6 +23,8 @@ object Parser {
             partition.isr().asScala.toList.map(node => fromKafka(node)))).toList)
 
   def fromKafka(node: common.Node): Node = Node(node.id(), node.host(), node.port(), Option(node.rack()))
+
+  def fromKafka(config: admin.Config): Config = Config(config.entries().asScala.map(s => (s.name(), s.value())).toMap)
 
   def fromPb(name: String, topicDescription: proto.collector.TopicDescription): TopicDescription =
     TopicDescription(

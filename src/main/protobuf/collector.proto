@@ -17,7 +17,7 @@ message CollectorEvent {
   string entityId = 2;
   oneof value {
     ClusterEvent clusterEvent = 3;
-    NodeEvent nodeEvent = 4;
+    BrokerEvent brokerEvent = 4;
     TopicEvent topicEvent = 5;
   }
 }
@@ -40,20 +40,22 @@ message ClusterUpdated {
 }
 
 // Supported Node Events
-message NodeEvent {
+message BrokerEvent {
   int32 id = 1;
   oneof event {
-    NodeCreated nodeCreated = 2;
-    NodeUpdated nodeUpdated = 3;
+    BrokerCreated brokerCreated = 2;
+    BrokerUpdated brokerUpdated = 3;
   }
 }
 
-message NodeCreated {
+message BrokerCreated {
   Node node = 1;
+  Config config = 2;
 }
 
-message NodeUpdated {
+message BrokerUpdated {
   Node node = 1;
+  Config config = 2;
 }
 
 // Supported Topic Events
@@ -71,6 +73,7 @@ message TopicCreated {
 
 message TopicUpdated {
   TopicDescription topicDescription = 1;
+  Config config = 2;
 }
 
 message TopicDescription {
@@ -93,4 +96,12 @@ message Node {
   string host = 2;
   int32 port = 3;
   string rack = 4;
+}
+
+message Config {
+  message Entry {
+    string name = 1;
+    string value = 2;
+  }
+  repeated Entry entries = 1;
 }

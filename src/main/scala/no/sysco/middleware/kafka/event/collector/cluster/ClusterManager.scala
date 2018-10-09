@@ -5,7 +5,7 @@ import java.time.Duration
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import io.opencensus.scala.Stats
 import io.opencensus.scala.stats.Measurement
-import no.sysco.middleware.kafka.event.collector.cluster.NodeManager.ListNodes
+import no.sysco.middleware.kafka.event.collector.cluster.BrokerManager.ListNodes
 import no.sysco.middleware.kafka.event.collector.internal.Parser
 import no.sysco.middleware.kafka.event.collector.model.{ Cluster, ClusterDescribed, NodesDescribed }
 import no.sysco.middleware.kafka.event.proto.collector._
@@ -40,7 +40,7 @@ class ClusterManager(
   import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
   import no.sysco.middleware.kafka.event.collector.metrics.Metrics._
 
-  val nodeManager: ActorRef = context.actorOf(NodeManager.props(eventProducer), "node-manager")
+  val brokerManager: ActorRef = context.actorOf(BrokerManager.props(eventProducer), "broker-manager")
 
   var cluster: Option[Cluster] = None
 
@@ -51,8 +51,8 @@ class ClusterManager(
     case clusterDescribed: ClusterDescribed => handleClusterDescribed(clusterDescribed)
     case clusterEvent: ClusterEvent         => handleClusterEvent(clusterEvent)
     case GetCluster()                       => handleGetCluster()
-    case nodeEvent: NodeEvent               => nodeManager forward nodeEvent
-    case listNodes: ListNodes               => nodeManager forward listNodes
+    case nodeEvent: NodeEvent               => brokerManager forward nodeEvent
+    case listNodes: ListNodes               => brokerManager forward listNodes
   }
 
   def handleDescribeCluster(): Unit = {
@@ -89,7 +89,7 @@ class ClusterManager(
           eventProducer ! ClusterEvent(clusterDescribed.id, ClusterEvent.Event.ClusterUpdated(ClusterUpdated(controller)))
         }
     }
-    nodeManager ! NodesDescribed(clusterDescribed.nodes)
+    brokerManager ! NodesDescribed(clusterDescribed.nodes)
   }
 
   def handleClusterEvent(clusterEvent: ClusterEvent): Unit = {

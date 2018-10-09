@@ -60,7 +60,7 @@ class TopicManager(
   import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
   import no.sysco.middleware.kafka.event.collector.metrics.Metrics._
 
-  var topicsAndDescription: Map[String, Option[TopicDescription]] = Map()
+  var topics: Map[String, Option[Topic]] = Map()
 
   override def preStart(): Unit = scheduleCollectTopics
 
@@ -89,7 +89,7 @@ class TopicManager(
    */
   def handleTopicsCollected(topicsCollected: TopicsCollected): Unit = {
     log.info(s"Handling ${topicsCollected.names.size} topics collected.")
-    evaluateCurrentTopics(topicsAndDescription.keys.toList, topicsCollected.names)
+    evaluateCurrentTopics(topics.keys.toList, topicsCollected.names)
     evaluateTopicsCollected(topicsCollected.names)
   }
 
@@ -124,10 +124,10 @@ class TopicManager(
       }
       // finally, topic is evaluated
       name match {
-        case n if !topicsAndDescription.keys.exists(_.equals(n)) =>
+        case n if !topics.keys.exists(_.equals(n)) =>
           Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
           eventProducer ! TopicEvent(name, TopicEvent.Event.TopicCreated(TopicCreated()))
-        case n if topicsAndDescription.keys.exists(_.equals(n)) =>
+        case n if topics.keys.exists(_.equals(n)) =>
           eventRepository ! DescribeTopic(name)
       }
       evaluateTopicsCollected(names)
@@ -150,13 +150,13 @@ class TopicManager(
         }
       }
 
-      // assume that assume, that topic name already collected, no null pointers
-      topicsAndDescription(topicName) match {
+      // assume that topic name already collected, no null pointers
+      topics(topicName) match {
         case None =>
           Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
           eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
         case Some(current) =>
-          if (!current.equals(topicDescription)) {
+          if (!current.description.equals(topicDescription)) {
             Stats.record(List(topicTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
             eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
           }
@@ -170,7 +170,7 @@ class TopicManager(
         Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicCreated match {
           case Some(_) =>
-            topicsAndDescription = topicsAndDescription + (topicEvent.name -> None)
+            topics = topics + (topicEvent.name -> None)
             eventRepository ! DescribeTopic(topicEvent.name)
           case None =>
         }
@@ -178,19 +178,20 @@ class TopicManager(
         Stats.record(List(topicTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicUpdated match {
           case Some(topicUpdated) =>
-            val topicDescription = Some(Parser.fromPb(topicEvent.name, topicUpdated.topicDescription.get))
-            topicsAndDescription = topicsAndDescription + (topicEvent.name -> topicDescription)
+            val topicDescription = Parser.fromPb(topicEvent.name, topicUpdated.topicDescription.get)
+            topics = topics + (topicEvent.name -> Some(Topic(topicEvent.name, topicDescription)))
           case None =>
         }
       case event if event.isTopicDeleted =>
         Stats.record(List(topicTypeTag, deletedOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicDeleted match {
           case Some(_) =>
-            topicsAndDescription = topicsAndDescription - topicEvent.name
+            topics = topics - topicEvent.name
           case None =>
         }
     }
   }
 
-  def handleListTopics(): Unit = sender() ! Topics(topicsAndDescription)
+  def handleListTopics(): Unit =
+    sender() ! Topics(topics.values.filter(_.isDefined).map(_.get).toList)
 }

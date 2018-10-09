@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import no.sysco.middleware.kafka.event.collector.cluster.ClusterManager
 import no.sysco.middleware.kafka.event.collector.cluster.ClusterManager.GetCluster
-import no.sysco.middleware.kafka.event.collector.cluster.NodeManager.ListNodes
+import no.sysco.middleware.kafka.event.collector.cluster.BrokerManager.ListNodes
 import no.sysco.middleware.kafka.event.collector.internal.{ EventConsumer, EventProducer, EventRepository }
 import no.sysco.middleware.kafka.event.collector.topic.TopicManager
 import no.sysco.middleware.kafka.event.collector.topic.TopicManager.ListTopics
