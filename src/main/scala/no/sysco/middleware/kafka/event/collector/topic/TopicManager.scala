@@ -143,9 +143,9 @@ class TopicManager(pollInterval: Duration, includeInternalTopics: Boolean, event
       }
   }
 
-//  private def filterInternalTopic(topicDescribed: TopicDescribed): Option[TopicDescribed] = {
-//    if (topicDescribed.topicAndDescription._2.internal == includeInternalTopics) Option(topicDescribed) else Option.empty
-//  }
+  //  private def filterInternalTopic(topicDescribed: TopicDescribed): Option[TopicDescribed] = {
+  //    if (topicDescribed.topicAndDescription._2.internal == includeInternalTopics) Option(topicDescribed) else Option.empty
+  //  }
 
   def handleCollectTopics(): Unit = {
     log.info("Handling collect topics command.")

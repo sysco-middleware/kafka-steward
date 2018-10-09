@@ -1,13 +1,10 @@
 package no.sysco.middleware.kafka.event.collector.topic
 
 import java.time.Duration
-import scala.concurrent.duration._
-
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
-import net.manub.embeddedkafka.{ EmbeddedKafka, EmbeddedKafkaConfig }
-import scala.concurrent.duration._
+import net.manub.embeddedkafka.EmbeddedKafkaConfig
 import no.sysco.middleware.kafka.event.collector.model._
 import no.sysco.middleware.kafka.event.collector.topic.TopicManager.ListTopics
 import no.sysco.middleware.kafka.event.proto
@@ -23,8 +20,7 @@ class TopicManagerSpec
   with ImplicitSender
   with WordSpecLike
   with Matchers
-  with BeforeAndAfterAll
-  with EmbeddedKafka {
+  with BeforeAndAfterAll {
 
   override def afterAll: Unit = {
     TestKit.shutdownActorSystem(system)
