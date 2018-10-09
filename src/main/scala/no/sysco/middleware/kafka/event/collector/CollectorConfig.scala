@@ -9,6 +9,7 @@ class CollectorConfig(config: Config) {
     val clusterPollInterval: Duration = config.getDuration("collector.cluster.poll-interval")
     val topicPollInterval: Duration = config.getDuration("collector.topic.poll-interval")
     val eventTopic: String = config.getString("collector.event-topic")
+    val includeInternalTopics: Boolean = config.getBoolean("collector.topic.include-internal-topics")
   }
   object Kafka {
     val bootstrapServers: String = config.getString("kafka.bootstrap-servers")

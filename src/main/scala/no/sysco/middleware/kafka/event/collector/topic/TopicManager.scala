@@ -13,8 +13,12 @@ import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDele
 import scala.concurrent.ExecutionContext
 
 object TopicManager {
-  def props(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, executionContext: ExecutionContext) =
-    Props(new TopicManager(pollInterval, eventRepository, eventProducer))
+  def props(
+    pollInterval: Duration,
+    includeInternalTopics: Boolean,
+    eventRepository: ActorRef,
+    eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, executionContext: ExecutionContext) =
+    Props(new TopicManager(pollInterval, includeInternalTopics, eventRepository, eventProducer))
 
   case class ListTopics()
 }
@@ -26,7 +30,7 @@ object TopicManager {
  * @param eventRepository Reference to Repository where events are stored.
  * @param eventProducer   Reference to Events producer, to publish events.
  */
-class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, val executionContext: ExecutionContext)
+class TopicManager(pollInterval: Duration, includeInternalTopics: Boolean, eventRepository: ActorRef, eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, val executionContext: ExecutionContext)
   extends Actor with ActorLogging {
 
   import TopicManager._
@@ -95,9 +99,24 @@ class TopicManager(pollInterval: Duration, eventRepository: ActorRef, eventProdu
     }
   }
 
+  /**
+   * Try to describe topic.
+   * If internal topics are excluded and described topic is internal, method will exit.
+   *
+   * @param topicDescribed   TopicDescribed information
+   */
   def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = topicDescribed.topicAndDescription match {
     case (topicName: String, topicDescription: TopicDescription) =>
       log.info("Handling topic {} described.", topicName)
+
+      if (!includeInternalTopics) {
+        if (topicDescription.internal) {
+          log.warning("Internal topic excluded: {}", topicName)
+          return
+        }
+      }
+
+      // assume that assume, that topic name already collected, no null pointers
       topicsAndDescription(topicName) match {
         case None =>
           Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
