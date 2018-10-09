@@ -37,6 +37,17 @@ class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventPro
 
   var cluster: Option[Cluster] = None
 
+  override def preStart(): Unit = scheduleDescribeCluster
+
+  override def receive(): Receive = {
+    case DescribeCluster()                  => handleDescribeCluster()
+    case clusterDescribed: ClusterDescribed => handleClusterDescribed(clusterDescribed)
+    case clusterEvent: ClusterEvent         => handleClusterEvent(clusterEvent)
+    case GetCluster()                       => handleGetCluster()
+    case nodeEvent: NodeEvent               => nodeManager forward nodeEvent
+    case listNodes: ListNodes               => nodeManager forward listNodes
+  }
+
   def handleDescribeCluster(): Unit = {
     log.info("Handling describe cluster command.")
     eventRepository ! DescribeCluster()
@@ -100,14 +111,4 @@ class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventPro
 
   def handleGetCluster(): Unit = sender() ! cluster
 
-  override def preStart(): Unit = scheduleDescribeCluster
-
-  override def receive(): Receive = {
-    case DescribeCluster()                  => handleDescribeCluster()
-    case clusterDescribed: ClusterDescribed => handleClusterDescribed(clusterDescribed)
-    case clusterEvent: ClusterEvent         => handleClusterEvent(clusterEvent)
-    case GetCluster()                       => handleGetCluster()
-    case nodeEvent: NodeEvent               => nodeManager forward nodeEvent
-    case listNodes: ListNodes               => nodeManager forward listNodes
-  }
 }
