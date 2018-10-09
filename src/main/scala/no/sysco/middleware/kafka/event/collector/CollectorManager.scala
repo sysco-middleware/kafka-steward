@@ -25,12 +25,21 @@ class CollectorManager(implicit actorSystem: ActorSystem, actorMaterializer: Act
   extends Actor with ActorLogging {
   val config: CollectorConfig = new CollectorConfig(ConfigFactory.load())
 
-  val eventProducer: ActorRef = context.actorOf(EventProducer.props(config.Kafka.bootstrapServers, config.Collector.eventTopic), "event-producer")
-  val eventRepository: ActorRef = context.actorOf(EventRepository.props(config.Kafka.bootstrapServers), "event-repository")
+  val eventProducer: ActorRef =
+    context.actorOf(EventProducer.props(config.Kafka.bootstrapServers, config.Collector.eventTopic), "event-producer")
+  val eventRepository: ActorRef =
+    context.actorOf(EventRepository.props(config.Kafka.bootstrapServers), "event-repository")
 
-  val clusterEventCollector: ActorRef = context.actorOf(ClusterManager.props(config.Collector.clusterPollInterval, eventRepository, eventProducer), "cluster-manager")
+  val clusterEventCollector: ActorRef =
+    context.actorOf(ClusterManager.props(config.Collector.Cluster.pollInterval, eventRepository, eventProducer), "cluster-manager")
   val topicEventCollector: ActorRef =
-    context.actorOf(TopicManager.props(config.Collector.topicPollInterval, config.Collector.includeInternalTopics, eventRepository, eventProducer), "topic-manager")
+    context.actorOf(TopicManager.props(
+      config.Collector.Topic.pollInterval,
+      config.Collector.Topic.includeInternalTopics,
+      config.Collector.Topic.whitelist,
+      config.Collector.Topic.blacklist,
+      eventRepository,
+      eventProducer), "topic-manager")
 
   val eventConsumer: ActorRef = context.actorOf(EventConsumer.props(self, config.Kafka.bootstrapServers, config.Collector.eventTopic), "event-consumer")
 
