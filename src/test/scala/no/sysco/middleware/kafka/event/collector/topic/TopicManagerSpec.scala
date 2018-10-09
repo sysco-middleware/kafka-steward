@@ -4,24 +4,24 @@ import java.time.Duration
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import net.manub.embeddedkafka.EmbeddedKafkaConfig
 import no.sysco.middleware.kafka.event.collector.internal.EventRepository.CollectTopics
-import no.sysco.middleware.kafka.event.collector.model.{TopicDescription, _}
+import no.sysco.middleware.kafka.event.collector.model.{ TopicDescription, _ }
 import no.sysco.middleware.kafka.event.collector.topic.TopicManager.ListTopics
 import no.sysco.middleware.kafka.event.proto
 import no.sysco.middleware.kafka.event.proto.collector._
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 class TopicManagerSpec
   extends TestKit(ActorSystem("test-topic-manager"))
-    with ImplicitSender
-    with WordSpecLike
-    with Matchers
-    with BeforeAndAfterAll {
+  with ImplicitSender
+  with WordSpecLike
+  with Matchers
+  with BeforeAndAfterAll {
 
   override def afterAll: Unit = {
     TestKit.shutdownActorSystem(system)

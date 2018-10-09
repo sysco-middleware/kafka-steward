@@ -2,24 +2,24 @@ package no.sysco.middleware.kafka.event.collector.topic
 
 import java.time.Duration
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.stream.ActorMaterializer
 import io.opencensus.scala.Stats
 import io.opencensus.scala.stats.Measurement
 import no.sysco.middleware.kafka.event.collector.internal.Parser
 import no.sysco.middleware.kafka.event.collector.model._
-import no.sysco.middleware.kafka.event.proto.collector.{TopicCreated, TopicDeleted, TopicEvent}
+import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent }
 
 import scala.concurrent.ExecutionContext
 
 object TopicManager {
   def props(
-             pollInterval: Duration,
-             includeInternalTopics: Boolean = true,
-             whitelistTopics: List[String] = List(),
-             blacklistTopics: List[String] = List(),
-             eventRepository: ActorRef,
-             eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, executionContext: ExecutionContext) =
+    pollInterval: Duration,
+    includeInternalTopics: Boolean = true,
+    whitelistTopics: List[String] = List(),
+    blacklistTopics: List[String] = List(),
+    eventRepository: ActorRef,
+    eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, executionContext: ExecutionContext) =
     Props(new TopicManager(pollInterval, includeInternalTopics, whitelistTopics, blacklistTopics, eventRepository, eventProducer))
 
   case class ListTopics()
@@ -27,25 +27,24 @@ object TopicManager {
 }
 
 /**
-  * Observe and publish Topic events.
-  *
-  * @param pollInterval          Frequency to poll topics from a Kafka Cluster.
-  * @param includeInternalTopics If internal topics should be included or not.
-  * @param whitelistTopics       list of topic names to include
-  * @param blacklistTopics       list of topic names to do not include.
-  * @param eventRepository       Reference to Repository where events are stored.
-  * @param eventProducer         Reference to Events producer, to publish events.
-  */
+ * Observe and publish Topic events.
+ *
+ * @param pollInterval          Frequency to poll topics from a Kafka Cluster.
+ * @param includeInternalTopics If internal topics should be included or not.
+ * @param whitelistTopics       list of topic names to include
+ * @param blacklistTopics       list of topic names to do not include.
+ * @param eventRepository       Reference to Repository where events are stored.
+ * @param eventProducer         Reference to Events producer, to publish events.
+ */
 class TopicManager(
-                    pollInterval: Duration,
-                    includeInternalTopics: Boolean,
-                    whitelistTopics: List[String],
-                    blacklistTopics: List[String],
-                    eventRepository: ActorRef,
-                    eventProducer: ActorRef)
-                  (implicit
-                   actorMaterializer: ActorMaterializer,
-                   val executionContext: ExecutionContext)
+    pollInterval: Duration,
+    includeInternalTopics: Boolean,
+    whitelistTopics: List[String],
+    blacklistTopics: List[String],
+    eventRepository: ActorRef,
+    eventProducer: ActorRef)(implicit
+    actorMaterializer: ActorMaterializer,
+    val executionContext: ExecutionContext)
   extends Actor with ActorLogging {
 
   import TopicManager._
@@ -57,11 +56,11 @@ class TopicManager(
   override def preStart(): Unit = scheduleCollectTopics
 
   override def receive(): Receive = {
-    case CollectTopics() => handleCollectTopics()
+    case CollectTopics()                  => handleCollectTopics()
     case topicsCollected: TopicsCollected => handleTopicsCollected(topicsCollected)
-    case topicDescribed: TopicDescribed => handleTopicDescribed(topicDescribed)
-    case topicEvent: TopicEvent => handleTopicEvent(topicEvent)
-    case ListTopics() => handleListTopics()
+    case topicDescribed: TopicDescribed   => handleTopicDescribed(topicDescribed)
+    case topicEvent: TopicEvent           => handleTopicEvent(topicEvent)
+    case ListTopics()                     => handleListTopics()
   }
 
   def handleCollectTopics(): Unit = {
@@ -76,9 +75,9 @@ class TopicManager(
   }
 
   /**
-    * Handle current list of topics collected by first checking if any topic has been deleted
-    * and then if any has been updated.
-    */
+   * Handle current list of topics collected by first checking if any topic has been deleted
+   * and then if any has been updated.
+   */
   def handleTopicsCollected(topicsCollected: TopicsCollected): Unit = {
     log.info(s"Handling ${topicsCollected.names.size} topics collected.")
     evaluateCurrentTopics(topicsAndDescription.keys.toList, topicsCollected.names)
@@ -126,11 +125,11 @@ class TopicManager(
   }
 
   /**
-    * Try to describe topic.
-    * If internal topics are excluded and described topic is internal, method will exit.
-    *
-    * @param topicDescribed TopicDescribed information
-    */
+   * Try to describe topic.
+   * If internal topics are excluded and described topic is internal, method will exit.
+   *
+   * @param topicDescribed TopicDescribed information
+   */
   def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = topicDescribed.topicAndDescription match {
     case (topicName: String, topicDescription: TopicDescription) =>
       log.info("Handling topic {} described.", topicName)

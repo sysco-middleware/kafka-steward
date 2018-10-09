@@ -4,23 +4,23 @@ import java.time.Duration
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import no.sysco.middleware.kafka.event.collector.cluster.ClusterManager.GetCluster
 import no.sysco.middleware.kafka.event.collector.internal.EventRepository.DescribeCluster
 import no.sysco.middleware.kafka.event.collector.internal.Parser
-import no.sysco.middleware.kafka.event.collector.model.{Cluster, ClusterDescribed}
+import no.sysco.middleware.kafka.event.collector.model.{ Cluster, ClusterDescribed }
 import no.sysco.middleware.kafka.event.proto.collector._
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 class ClusterManagerSpec
   extends TestKit(ActorSystem("cluster-topic-manager"))
-    with ImplicitSender
-    with WordSpecLike
-    with Matchers
-    with BeforeAndAfterAll {
+  with ImplicitSender
+  with WordSpecLike
+  with Matchers
+  with BeforeAndAfterAll {
 
   override def afterAll: Unit = {
     TestKit.shutdownActorSystem(system)
@@ -119,7 +119,7 @@ class ClusterManagerSpec
 
         manager ! ClusterDescribed("cluster-1", Option.empty, List())
 
-        val clusterEvent = eventRepository.expectMsgType[ClusterEvent]
+        val clusterEvent = eventProducer.expectMsgType[ClusterEvent]
         assert(clusterEvent.event.isClusterUpdated)
       }
     }

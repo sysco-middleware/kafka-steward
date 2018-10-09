@@ -2,21 +2,21 @@ package no.sysco.middleware.kafka.event.collector.cluster
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import no.sysco.middleware.kafka.event.collector.cluster.NodeManager.ListNodes
-import no.sysco.middleware.kafka.event.collector.model.{Node, Nodes, NodesDescribed}
+import no.sysco.middleware.kafka.event.collector.model.{ Node, Nodes, NodesDescribed }
 import no.sysco.middleware.kafka.event.proto
-import no.sysco.middleware.kafka.event.proto.collector.{NodeCreated, NodeEvent, NodeUpdated}
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import no.sysco.middleware.kafka.event.proto.collector.{ NodeCreated, NodeEvent, NodeUpdated }
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.concurrent.ExecutionContext
 
 class NodeManagerSpec
   extends TestKit(ActorSystem("node-topic-manager"))
-    with ImplicitSender
-    with WordSpecLike
-    with Matchers
-    with BeforeAndAfterAll {
+  with ImplicitSender
+  with WordSpecLike
+  with Matchers
+  with BeforeAndAfterAll {
 
   override def afterAll: Unit = {
     TestKit.shutdownActorSystem(system)
