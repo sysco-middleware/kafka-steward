@@ -99,7 +99,7 @@ class ClusterManagerSpec
 
         manager ! ClusterDescribed("cluster-1", Option.empty, List.empty)
 
-        val clusterEvent = eventRepository.expectMsgType[ClusterEvent]
+        val clusterEvent = eventProducer.expectMsgType[ClusterEvent]
         assert(clusterEvent.event.isClusterCreated)
       }
       "publish cluster updated event when existing state" in {
