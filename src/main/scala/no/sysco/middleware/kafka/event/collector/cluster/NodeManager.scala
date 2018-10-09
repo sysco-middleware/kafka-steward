@@ -24,6 +24,29 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
 
   var nodes: Map[String, Node] = Map()
 
+  override def receive(): Receive = {
+    case nodesDescribed: NodesDescribed => handleNodesDescribed(nodesDescribed)
+    case nodeEvent: NodeEvent           => handleNodeEvent(nodeEvent)
+    case ListNodes()                    => handleListNodes()
+  }
+
+  def handleNodesDescribed(nodesDescribed: NodesDescribed): Unit = {
+    log.info("Handling {} nodes described event.", nodesDescribed.nodes.size)
+    evaluateCurrentNodes(nodes.values.toList, nodesDescribed.nodes)
+    evaluateNodesDescribed(nodesDescribed.nodes)
+  }
+
+  private def evaluateCurrentNodes(currentNodes: List[Node], nodes: List[Node]): Unit = {
+    currentNodes match {
+      case Nil =>
+      case node :: ns =>
+        if (!nodes.contains(node)) {
+          log.warning("{} is not listed", node)
+        }
+        evaluateCurrentNodes(ns, nodes)
+    }
+  }
+
   private def evaluateNodesDescribed(listedNodes: List[Node]): Unit = {
     listedNodes match {
       case Nil =>
@@ -40,23 +63,6 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
         }
         evaluateNodesDescribed(ns)
     }
-  }
-
-  private def evaluateCurrentNodes(currentNodes: List[Node], nodes: List[Node]): Unit = {
-    currentNodes match {
-      case Nil =>
-      case node :: ns =>
-        if (!nodes.contains(node)) {
-          log.warning("{} is not listed", node)
-          evaluateCurrentNodes(ns, nodes)
-        }
-    }
-  }
-
-  def handleNodesDescribed(nodesDescribed: NodesDescribed): Unit = {
-    log.info("Handling {} nodes described event.", nodesDescribed.nodes.size)
-    evaluateCurrentNodes(nodes.values.toList, nodesDescribed.nodes)
-    evaluateNodesDescribed(nodesDescribed.nodes)
   }
 
   def handleNodeEvent(nodeEvent: NodeEvent): Unit = {
@@ -81,9 +87,4 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
 
   def handleListNodes(): Unit = sender() ! Nodes(nodes)
 
-  override def receive(): Receive = {
-    case nodesDescribed: NodesDescribed => handleNodesDescribed(nodesDescribed)
-    case nodeEvent: NodeEvent           => handleNodeEvent(nodeEvent)
-    case ListNodes()                    => handleListNodes()
-  }
 }
