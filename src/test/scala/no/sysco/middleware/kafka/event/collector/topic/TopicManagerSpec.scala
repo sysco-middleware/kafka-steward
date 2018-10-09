@@ -29,7 +29,7 @@ class TopicManagerSpec
   val kafkaConfig: EmbeddedKafkaConfig = EmbeddedKafkaConfig(kafkaPort = 0, zooKeeperPort = 0)
 
   "Topic Manager" must {
-    "should have a new topic stored when there is a existing topic" in {
+    "should have a new topic stored when there is an existing topic" in {
       implicit val actorMaterializer: ActorMaterializer = ActorMaterializer()
       implicit val executionContext: ExecutionContext = system.dispatcher
 
@@ -68,34 +68,54 @@ class TopicManagerSpec
       assert(topicsV1.topicsAndDescription("topic-1").get.partitions.size == 1)
 
       manager ! TopicEvent("topic-2", TopicEvent.Event.TopicDeleted(TopicDeleted()))
-
       manager ! ListTopics()
       val topicsV2 = expectMsgType[Topics]
       assert(topicsV2.topicsAndDescription.count(_._2.isEmpty) == 1)
       assert(topicsV2.topicsAndDescription.get("topic-2").isEmpty)
     }
 
-    "should filter internal topic" in {
+    "should describe internal topic" in {
       implicit val actorMaterializer: ActorMaterializer = ActorMaterializer()
       implicit val executionContext: ExecutionContext = system.dispatcher
 
       val interval = Duration.ofSeconds(100)
       val includeInternalTopics = false
 
-      val eventRepository = TestProbe()
-      val eventProducer = TestProbe()
-      val manager = system.actorOf(TopicManager.props(interval, includeInternalTopics, eventRepository.ref, eventProducer.ref))
+      val eventRepositoryProbe = TestProbe()
+      val eventProducerProbe = TestProbe()
+      val manager = system.actorOf(TopicManager.props(interval, includeInternalTopics, eventRepositoryProbe.ref, eventProducerProbe.ref))
 
-      // Act
+      // collect 3 topics
+      manager ! TopicEvent("topic1", TopicEvent.Event.TopicCreated(TopicCreated()))
+      manager ! TopicEvent("topic2", TopicEvent.Event.TopicCreated(TopicCreated()))
+      manager ! TopicEvent("topic3", TopicEvent.Event.TopicCreated(TopicCreated()))
+
+      // describe 2 internal
       manager ! TopicDescribed(("topic1", TopicDescription(internal = true, List.empty)))
       manager ! TopicDescribed(("topic2", TopicDescription(internal = true, List.empty)))
-      manager ! TopicDescribed(("topic3", TopicDescription(internal = true, List.empty)))
+      eventProducerProbe.expectNoMessage(500 millis)
+      // describe 1 NOT internal
+      manager ! TopicDescribed(("topic3", TopicDescription(internal = false, List.empty)))
+      eventProducerProbe.expectMsgType[TopicEvent]
+
+      // simulate topics update [eventProducer ~> eventConsumer ~> collectorManager ~> TopicManager]
+      // [collectorManager ~> TopicManager]
+      manager !
+        TopicEvent(
+          "topic3",
+          TopicEvent.Event.TopicUpdated(
+            TopicUpdated(
+              Some(
+                proto.collector.TopicDescription(
+                  internal = false,
+                  List(proto.collector.TopicDescription.TopicPartitionInfo(0, Some(proto.collector.Node(0, "localhost", 9092, "1")))))))))
+
       manager ! ListTopics()
       val topicsV0 = expectMsgType[Topics]
 
-      assert(topicsV0.topicsAndDescription.isEmpty)
-      eventProducer.expectNoMessage(500 millis)
-
+      assert(topicsV0.topicsAndDescription.size == 3)
+      // description updated
+      assert(topicsV0.topicsAndDescription.count(_._2.isEmpty) == 2)
     }
   }
 }
