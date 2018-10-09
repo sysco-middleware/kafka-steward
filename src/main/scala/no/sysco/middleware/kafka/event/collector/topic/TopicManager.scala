@@ -19,8 +19,17 @@ object TopicManager {
     whitelistTopics: List[String] = List(),
     blacklistTopics: List[String] = List(),
     eventRepository: ActorRef,
-    eventProducer: ActorRef)(implicit actorMaterializer: ActorMaterializer, executionContext: ExecutionContext) =
-    Props(new TopicManager(pollInterval, includeInternalTopics, whitelistTopics, blacklistTopics, eventRepository, eventProducer))
+    eventProducer: ActorRef)(implicit
+    actorMaterializer: ActorMaterializer,
+    executionContext: ExecutionContext) =
+    Props(
+      new TopicManager(
+        pollInterval,
+        includeInternalTopics,
+        whitelistTopics,
+        blacklistTopics,
+        eventRepository,
+        eventProducer))
 
   case class ListTopics()
 

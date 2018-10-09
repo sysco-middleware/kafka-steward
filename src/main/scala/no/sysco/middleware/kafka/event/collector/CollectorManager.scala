@@ -21,27 +21,47 @@ object CollectorManager {
 /**
  * Main application actor. Manage entity managers to collect and publish events from a Kafka Cluster.
  */
-class CollectorManager(implicit actorSystem: ActorSystem, actorMaterializer: ActorMaterializer, executionContext: ExecutionContext)
+class CollectorManager(implicit
+    actorSystem: ActorSystem,
+    actorMaterializer: ActorMaterializer,
+    executionContext: ExecutionContext)
   extends Actor with ActorLogging {
   val config: CollectorConfig = new CollectorConfig(ConfigFactory.load())
 
   val eventProducer: ActorRef =
-    context.actorOf(EventProducer.props(config.Kafka.bootstrapServers, config.Collector.eventTopic), "event-producer")
+    context.actorOf(
+      EventProducer.props(
+        config.Kafka.bootstrapServers,
+        config.Collector.eventTopic),
+      "event-producer")
   val eventRepository: ActorRef =
     context.actorOf(EventRepository.props(config.Kafka.bootstrapServers), "event-repository")
 
   val clusterEventCollector: ActorRef =
-    context.actorOf(ClusterManager.props(config.Collector.Cluster.pollInterval, eventRepository, eventProducer), "cluster-manager")
+    context.actorOf(
+      ClusterManager.props(
+        config.Collector.Cluster.pollInterval,
+        eventRepository,
+        eventProducer),
+      "cluster-manager")
   val topicEventCollector: ActorRef =
-    context.actorOf(TopicManager.props(
-      config.Collector.Topic.pollInterval,
-      config.Collector.Topic.includeInternalTopics,
-      config.Collector.Topic.whitelist,
-      config.Collector.Topic.blacklist,
-      eventRepository,
-      eventProducer), "topic-manager")
+    context.actorOf(
+      TopicManager.props(
+        config.Collector.Topic.pollInterval,
+        config.Collector.Topic.includeInternalTopics,
+        config.Collector.Topic.whitelist,
+        config.Collector.Topic.blacklist,
+        eventRepository,
+        eventProducer),
+      "topic-manager")
 
-  val eventConsumer: ActorRef = context.actorOf(EventConsumer.props(self, config.Kafka.bootstrapServers, config.Collector.eventTopic), "event-consumer")
+  val eventConsumer: ActorRef =
+    context.actorOf(
+      EventConsumer.props(
+        self,
+        config.Kafka.bootstrapServers,
+        config.Collector.eventTopic),
+      "event-consumer")
 
   override def receive: Receive = {
     case collectorEvent: CollectorEvent => handleEvent(collectorEvent)

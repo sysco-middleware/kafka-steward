@@ -15,7 +15,12 @@ import scala.language.postfixOps
 
 object EventConsumer {
 
-  def props(eventCollectorManager: ActorRef, bootstrapServers: String, eventTopic: String)(implicit actorMaterializer: ActorMaterializer, executionContext: ExecutionContext): Props =
+  def props(
+    eventCollectorManager: ActorRef,
+    bootstrapServers: String,
+    eventTopic: String)(implicit
+    actorMaterializer: ActorMaterializer,
+    executionContext: ExecutionContext): Props =
     Props(new EventConsumer(eventCollectorManager, bootstrapServers, eventTopic))
 }
 
@@ -24,7 +29,12 @@ object EventConsumer {
  *
  * @param collectorManager Reference to Collector Manager, which consume this events.
  */
-class EventConsumer(collectorManager: ActorRef, bootstrapServers: String, eventTopic: String)(implicit materializer: ActorMaterializer, executionContext: ExecutionContext)
+class EventConsumer(
+    collectorManager: ActorRef,
+    bootstrapServers: String,
+    eventTopic: String)(implicit
+    materializer: ActorMaterializer,
+    executionContext: ExecutionContext)
   extends Actor with ActorLogging {
 
   val consumerSettings: ConsumerSettings[String, Array[Byte]] =

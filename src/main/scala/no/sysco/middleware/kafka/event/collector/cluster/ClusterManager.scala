@@ -13,10 +13,14 @@ import no.sysco.middleware.kafka.event.proto.collector._
 import scala.concurrent.ExecutionContext
 
 object ClusterManager {
-  def props(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit executionContext: ExecutionContext) =
+  def props(
+    pollInterval: Duration,
+    eventRepository: ActorRef,
+    eventProducer: ActorRef)(implicit executionContext: ExecutionContext) =
     Props(new ClusterManager(pollInterval, eventRepository, eventProducer))
 
   case class GetCluster()
+
 }
 
 /**
@@ -26,7 +30,10 @@ object ClusterManager {
  * @param eventRepository Reference to repository where to query.
  * @param eventProducer   Reference to producer, to publish events.
  */
-class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventProducer: ActorRef)(implicit executionContext: ExecutionContext)
+class ClusterManager(
+    pollInterval: Duration,
+    eventRepository: ActorRef,
+    eventProducer: ActorRef)(implicit executionContext: ExecutionContext)
   extends Actor with ActorLogging {
 
   import ClusterManager._
@@ -67,13 +74,17 @@ class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventPro
     }
     cluster match {
       case None =>
-        Stats.record(List(clusterTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+        Stats.record(
+          List(clusterTypeTag, createdOperationTypeTag),
+          Measurement.double(totalMessageProducedMeasure, 1))
         cluster = Some(Cluster(clusterDescribed.id, clusterDescribed.controller))
         eventProducer ! ClusterEvent(clusterDescribed.id, ClusterEvent.Event.ClusterCreated(ClusterCreated(controller)))
       case Some(thisCluster) =>
         val thatCluster = Cluster(clusterDescribed.id, clusterDescribed.controller)
         if (!thisCluster.equals(thatCluster)) {
-          Stats.record(List(clusterTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+          Stats.record(
+            List(clusterTypeTag, updatedOperationTypeTag),
+            Measurement.double(totalMessageProducedMeasure, 1))
           cluster = Some(Cluster(clusterDescribed.id, clusterDescribed.controller))
           eventProducer ! ClusterEvent(clusterDescribed.id, ClusterEvent.Event.ClusterUpdated(ClusterUpdated(controller)))
         }
@@ -85,7 +96,9 @@ class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventPro
     log.info("Handling cluster {} event.", clusterEvent.id)
     clusterEvent.event match {
       case event if event.isClusterCreated =>
-        Stats.record(List(clusterTypeTag, createdOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
+        Stats.record(
+          List(clusterTypeTag, createdOperationTypeTag),
+          Measurement.double(totalMessageConsumedMeasure, 1))
         event.clusterCreated match {
           case Some(clusterCreated) =>
             val controller = clusterCreated.controller match {
@@ -96,7 +109,9 @@ class ClusterManager(pollInterval: Duration, eventRepository: ActorRef, eventPro
           case None =>
         }
       case event if event.isClusterUpdated =>
-        Stats.record(List(clusterTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
+        Stats.record(
+          List(clusterTypeTag, updatedOperationTypeTag),
+          Measurement.double(totalMessageConsumedMeasure, 1))
         event.clusterUpdated match {
           case Some(clusterUpdated) =>
             val controller = clusterUpdated.controller match {

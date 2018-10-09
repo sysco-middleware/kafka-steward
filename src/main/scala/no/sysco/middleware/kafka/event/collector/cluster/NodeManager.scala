@@ -53,11 +53,15 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
       case node :: ns =>
         nodes.get(String.valueOf(node.id)) match {
           case None =>
-            Stats.record(List(nodeTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+            Stats.record(
+              List(nodeTypeTag, createdOperationTypeTag),
+              Measurement.double(totalMessageProducedMeasure, 1))
             eventProducer ! NodeEvent(node.id, NodeEvent.Event.NodeCreated(NodeCreated(Some(Parser.toPb(node)))))
           case Some(thisNode) =>
             if (!thisNode.equals(node)) {
-              Stats.record(List(nodeTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+              Stats.record(
+                List(nodeTypeTag, updatedOperationTypeTag),
+                Measurement.double(totalMessageProducedMeasure, 1))
               eventProducer ! NodeEvent(node.id, NodeEvent.Event.NodeUpdated(NodeUpdated(Some(Parser.toPb(node)))))
             }
         }
@@ -69,14 +73,18 @@ class NodeManager(eventProducer: ActorRef) extends Actor with ActorLogging {
     log.info("Handling node {} event.", nodeEvent.id)
     nodeEvent.event match {
       case event if event.isNodeCreated =>
-        Stats.record(List(nodeTypeTag, createdOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
+        Stats.record(
+          List(nodeTypeTag, createdOperationTypeTag),
+          Measurement.double(totalMessageConsumedMeasure, 1))
         event.nodeCreated match {
           case Some(nodeCreated) =>
             nodes = nodes + (String.valueOf(nodeEvent.id) -> Parser.fromPb(nodeCreated.getNode))
           case None =>
         }
       case event if event.isNodeUpdated =>
-        Stats.record(List(nodeTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
+        Stats.record(
+          List(nodeTypeTag, updatedOperationTypeTag),
+          Measurement.double(totalMessageConsumedMeasure, 1))
         event.nodeUpdated match {
           case Some(nodeUpdated) =>
             nodes = nodes + (String.valueOf(nodeEvent.id) -> Parser.fromPb(nodeUpdated.getNode))
