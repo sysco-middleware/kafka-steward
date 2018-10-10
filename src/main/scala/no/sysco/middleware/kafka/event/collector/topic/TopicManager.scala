@@ -65,7 +65,7 @@ class TopicManager(
   import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
   import no.sysco.middleware.kafka.event.collector.metrics.Metrics._
 
-  var topics: Map[String, Option[Topic]] = Map()
+  var topics: Map[String, Topic] = Map()
 
   implicit val timeout: Timeout = 5 seconds
 
@@ -161,8 +161,7 @@ class TopicManager(
         }
       }
 
-      // assume that topic name already collected, no null pointers
-      topics(topicName) match {
+      topics.get(topicName) match {
         case None =>
           val configFuture =
             (eventRepository ? DescribeConfig(EventRepository.ResourceType.Topic, topicName)).mapTo[Config]
@@ -201,7 +200,6 @@ class TopicManager(
           Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicCreated match {
           case Some(_) =>
-            topics = topics + (topicEvent.name -> None)
             eventRepository ! DescribeTopic(topicEvent.name)
           case None =>
         }
@@ -212,8 +210,8 @@ class TopicManager(
         event.topicUpdated match {
           case Some(topicUpdated) =>
             val topicDescription = fromPb(topicEvent.name, topicUpdated.topicDescription.get)
-            val config = fromPb(topicUpdated.config.get)
-            topics = topics + (topicEvent.name -> Some(Topic(topicEvent.name, topicDescription, config)))
+            val config = fromPb(topicUpdated.config)
+            topics = topics + (topicEvent.name -> Topic(topicEvent.name, topicDescription, config))
           case None =>
         }
       case event if event.isTopicDeleted =>
@@ -229,5 +227,5 @@ class TopicManager(
   }
 
   def handleListTopics(): Unit =
-    sender() ! Topics(topics.values.filter(_.isDefined).map(_.get).toList)
+    sender() ! Topics(topics.values.toList)
 }

@@ -44,8 +44,12 @@ object Parser {
       case s              => Some(s)
     })
 
-  def fromPb(config: proto.collector.Config): Config =
-    Config(config.entries.map(entry => entry.name -> entry.value).toMap)
+  def fromPb(configOption: Option[proto.collector.Config]): Config =
+    configOption match {
+      case Some(config) =>
+        Config(config.entries.map(entry => entry.name -> entry.value).toMap)
+      case None => Config()
+    }
   def toPb(topicDescription: TopicDescription, config: Config): proto.collector.TopicUpdated =
     proto.collector.TopicUpdated(
       Some(
