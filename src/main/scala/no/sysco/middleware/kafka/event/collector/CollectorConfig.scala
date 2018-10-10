@@ -4,8 +4,6 @@ import java.time.Duration
 
 import com.typesafe.config.Config
 
-import scala.collection.JavaConverters._
-
 class CollectorConfig(config: Config) {
   object Collector {
     val eventTopic: String = config.getString("collector.event-topic")
@@ -17,8 +15,8 @@ class CollectorConfig(config: Config) {
     object Topic {
       val pollInterval: Duration = config.getDuration("collector.topic.poll-interval")
       val includeInternalTopics: Boolean = config.getBoolean("collector.topic.include-internal-topics")
-      val whitelist: List[String] = config.getStringList("collector.topic.whitelist").asScala.toList
-      val blacklist: List[String] = config.getStringList("collector.topic.blacklist").asScala.toList
+      val whitelist: List[String] = config.getString("collector.topic.whitelist").split(",").toList
+      val blacklist: List[String] = config.getString("collector.topic.blacklist").split(",").toList
     }
   }
   object Kafka {
