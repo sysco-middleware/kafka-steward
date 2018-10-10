@@ -1,7 +1,9 @@
 package no.sysco.middleware.kafka.event.collector.internal
 
+import no.sysco.middleware.kafka.event.collector.model.Config
 import no.sysco.middleware.kafka.event.proto
 import org.apache.kafka
+import org.apache.kafka.clients.admin.ConfigEntry
 import org.scalatest.FlatSpec
 
 import scala.collection.JavaConverters._
@@ -31,10 +33,40 @@ class ParserSpec extends FlatSpec {
     val description = Parser.fromPb("topic", pb)
     assert(!description.internal)
     assert(description.partitions.size == 1)
-    //FIXME    val descriptionPb = Parser.toPb(description)
-    //FIXME    assert(pb.equals(descriptionPb.topicDescription.get))
+    val descriptionPb = Parser.toPb(description, Config())
+    assert(pb.equals(descriptionPb.topicDescription.get))
   }
 
-  //TODO add scenario for configs
+  it should "convert a PB Config into a Local Config and vice-versa" in {
+    val configPb =
+      proto.collector.Config(
+        Seq(
+          proto.collector.Config.Entry("k1", "v1"),
+          proto.collector.Config.Entry("k2", "v2"),
+          proto.collector.Config.Entry("k3", "v3"),
+        ))
+    val config = Parser.fromPb(Some(configPb))
+    assert(config.entries.size == 3)
+    assert(config.entries("k1").equals("v1"))
+    assert(config.entries("k2").equals("v2"))
+    assert(config.entries("k3").equals("v3"))
+    val configPb2 = Parser.toPb(config)
+    assert(configPb.equals(configPb2))
+  }
+
+  it should "convert a Kafka Config into a Local representation" in {
+    val configKafka =
+      new kafka.clients.admin.Config(
+        List(
+          new ConfigEntry("k1", "v1"),
+          new ConfigEntry("k2", "v2"),
+          new ConfigEntry("k3", "v3"),
+        ).asJava)
+    val config = Parser.fromKafka(configKafka)
+    assert(config.entries.size == 3)
+    assert(config.entries("k1").equals("v1"))
+    assert(config.entries("k2").equals("v2"))
+    assert(config.entries("k3").equals("v3"))
+  }
 
 }
