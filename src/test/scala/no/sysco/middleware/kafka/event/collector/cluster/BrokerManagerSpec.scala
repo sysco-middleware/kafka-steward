@@ -2,13 +2,14 @@ package no.sysco.middleware.kafka.event.collector.cluster
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import no.sysco.middleware.kafka.event.collector.cluster.BrokerManager.ListBrokers
-import no.sysco.middleware.kafka.event.collector.internal.EventRepository.{DescribeConfig, ResourceType}
+import no.sysco.middleware.kafka.event.collector.internal.EventRepository.{ DescribeConfig, ResourceType }
+import no.sysco.middleware.kafka.event.collector.model
 import no.sysco.middleware.kafka.event.collector.model._
 import no.sysco.middleware.kafka.event.proto
-import no.sysco.middleware.kafka.event.proto.collector.{BrokerCreated, BrokerEvent, BrokerUpdated}
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import no.sysco.middleware.kafka.event.proto.collector.{ BrokerCreated, BrokerEvent, BrokerUpdated }
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.concurrent.ExecutionContext
 
@@ -56,7 +57,7 @@ class BrokerManagerSpec
 
         manager ! NodesDescribed(List(Node(1, "host", 9092)))
         eventRepository.expectMsg(DescribeConfig(ResourceType.Broker, "1"))
-        eventRepository.reply(Config())
+        eventRepository.reply(model.ConfigDescribed(Config(Map(("a", "b")))))
 
         val brokerEvent = eventProducer.expectMsgType[BrokerEvent]
         assert(brokerEvent.event.isBrokerUpdated)

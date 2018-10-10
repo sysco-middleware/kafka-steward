@@ -24,7 +24,7 @@ class ParserSpec extends FlatSpec {
   }
 
   it should "convert a PB Topic Description into a Local Description and vice-versa" in {
-    val nodePb = proto.collector.Node(0, "localhost", 9092, null)
+    val nodePb = proto.collector.Node(0, "localhost", 9092)
     val node = Parser.fromPb(nodePb)
     assert(node.host.equals("localhost"))
     assert(node.port == 9092)

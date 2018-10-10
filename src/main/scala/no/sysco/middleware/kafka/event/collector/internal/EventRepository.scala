@@ -3,12 +3,12 @@ package no.sysco.middleware.kafka.event.collector.internal
 import java.util.Properties
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import no.sysco.middleware.kafka.event.collector.internal.EventRepository.ResourceType.ResourceType
 import no.sysco.middleware.kafka.event.collector.internal.Parser._
 import no.sysco.middleware.kafka.event.collector.model._
 import org.apache.kafka.clients.admin
-import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig}
+import org.apache.kafka.clients.admin.{ AdminClient, AdminClientConfig }
 import org.apache.kafka.common.config.ConfigResource
 
 import scala.collection.JavaConverters._
@@ -38,10 +38,10 @@ object EventRepository {
 }
 
 /**
-  * Query Cluster details from a Kafka cluster.
-  *
-  * @param adminClient Client to connect to a Kafka Cluster.
-  */
+ * Query Cluster details from a Kafka cluster.
+ *
+ * @param adminClient Client to connect to a Kafka Cluster.
+ */
 class EventRepository(adminClient: AdminClient) extends Actor with ActorLogging {
 
   import EventRepository._
@@ -100,16 +100,16 @@ class EventRepository(adminClient: AdminClient) extends Actor with ActorLogging 
 
   private def toKafka(resourceType: ResourceType): ConfigResource.Type = resourceType match {
     case ResourceType.Broker => ConfigResource.Type.BROKER
-    case ResourceType.Topic => ConfigResource.Type.TOPIC
-    case _ => ConfigResource.Type.UNKNOWN
+    case ResourceType.Topic  => ConfigResource.Type.TOPIC
+    case _                   => ConfigResource.Type.UNKNOWN
   }
 
   override def postStop(): Unit = adminClient.close(1, TimeUnit.SECONDS)
 
   override def receive(): Receive = {
-    case DescribeCluster() => handleDescribeCluster()
-    case CollectTopics() => handleCollectTopics()
-    case describeTopics: DescribeTopic => handleDescribeTopic(describeTopics)
+    case DescribeCluster()              => handleDescribeCluster()
+    case CollectTopics()                => handleCollectTopics()
+    case describeTopics: DescribeTopic  => handleDescribeTopic(describeTopics)
     case describeConfig: DescribeConfig => handleDescribeConfig(describeConfig)
   }
 }

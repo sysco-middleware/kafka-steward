@@ -4,14 +4,14 @@ import java.time.Duration
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import net.manub.embeddedkafka.EmbeddedKafkaConfig
-import no.sysco.middleware.kafka.event.collector.internal.EventRepository.{CollectTopics, DescribeConfig, DescribeTopic, ResourceType}
-import no.sysco.middleware.kafka.event.collector.model.{TopicDescription, _}
+import no.sysco.middleware.kafka.event.collector.internal.EventRepository.{ CollectTopics, DescribeConfig, DescribeTopic, ResourceType }
+import no.sysco.middleware.kafka.event.collector.model.{ TopicDescription, _ }
 import no.sysco.middleware.kafka.event.collector.topic.TopicManager.ListTopics
 import no.sysco.middleware.kafka.event.proto
-import no.sysco.middleware.kafka.event.proto.collector.{TopicCreated, TopicDeleted, TopicEvent, TopicUpdated}
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent, TopicUpdated }
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -101,7 +101,6 @@ class TopicManagerSpec
                   proto.collector.TopicDescription(
                     internal = false,
                     List(proto.collector.TopicDescription.TopicPartitionInfo(0, Some(proto.collector.Node(0, "localhost", 9092, "1")))))))))
-
 
         // then, current state should reflect topic updated
         manager ! ListTopics()

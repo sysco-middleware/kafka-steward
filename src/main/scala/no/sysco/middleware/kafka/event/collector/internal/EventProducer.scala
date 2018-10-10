@@ -49,7 +49,7 @@ class EventProducer(eventTopic: String, producer: Producer[String, Array[Byte]])
     case brokerEvent: BrokerEvent =>
       self !
         CollectorEvent(
-          CollectorEvent.EntityType.NODE,
+          CollectorEvent.EntityType.BROKER,
           brokerEvent.id,
           CollectorEvent.Value.BrokerEvent(brokerEvent))
     case topicEvent: TopicEvent =>

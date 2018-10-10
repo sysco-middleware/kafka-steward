@@ -1,6 +1,6 @@
 package no.sysco.middleware.kafka.event.collector.cluster
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.pattern.ask
 import akka.util.Timeout
 import io.opencensus.scala.Stats
@@ -9,17 +9,17 @@ import no.sysco.middleware.kafka.event.collector.internal.EventRepository
 import no.sysco.middleware.kafka.event.collector.internal.EventRepository.DescribeConfig
 import no.sysco.middleware.kafka.event.collector.internal.Parser._
 import no.sysco.middleware.kafka.event.collector.model._
-import no.sysco.middleware.kafka.event.proto.collector.{BrokerCreated, BrokerEvent, BrokerUpdated}
+import no.sysco.middleware.kafka.event.proto.collector.{ BrokerCreated, BrokerEvent, BrokerUpdated }
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 object BrokerManager {
   def props(
-             eventRepository: ActorRef,
-             eventProducer: ActorRef)(implicit executionContext: ExecutionContext): Props =
+    eventRepository: ActorRef,
+    eventProducer: ActorRef)(implicit executionContext: ExecutionContext): Props =
     Props(new BrokerManager(eventRepository, eventProducer))
 
   case class ListBrokers()
@@ -27,10 +27,10 @@ object BrokerManager {
 }
 
 /**
-  * Manage Cluster Nodes state.
-  *
-  * @param eventProducer Reference to producer, to publish events.
-  */
+ * Manage Cluster Nodes state.
+ *
+ * @param eventProducer Reference to producer, to publish events.
+ */
 class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit executionContext: ExecutionContext)
   extends Actor with ActorLogging {
 
@@ -43,8 +43,8 @@ class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit
 
   override def receive(): Receive = {
     case nodesDescribed: NodesDescribed => handleNodesDescribed(nodesDescribed)
-    case brokerEvent: BrokerEvent => handleBrokerEvent(brokerEvent)
-    case ListBrokers() => handleListBrokers()
+    case brokerEvent: BrokerEvent       => handleBrokerEvent(brokerEvent)
+    case ListBrokers()                  => handleListBrokers()
   }
 
   def handleNodesDescribed(nodesDescribed: NodesDescribed): Unit = {
@@ -76,7 +76,7 @@ class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit
             configFuture onComplete {
               case Success(configDescribed) =>
                 Stats.record(
-                  List(nodeTypeTag, createdOperationTypeTag),
+                  List(brokerTypeTag, createdOperationTypeTag),
                   Measurement.double(totalMessageProducedMeasure, 1))
                 eventProducer !
                   BrokerEvent(brokerId, BrokerEvent.Event.BrokerCreated(BrokerCreated(Some(toPb(node)), Some(toPb(configDescribed.config)))))
@@ -89,7 +89,7 @@ class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit
               case Success(configDescribed) =>
                 if (!thisBroker.equals(Broker(brokerId, node, configDescribed.config))) {
                   Stats.record(
-                    List(nodeTypeTag, updatedOperationTypeTag),
+                    List(brokerTypeTag, updatedOperationTypeTag),
                     Measurement.double(totalMessageProducedMeasure, 1))
                   eventProducer !
                     BrokerEvent(brokerId, BrokerEvent.Event.BrokerUpdated(BrokerUpdated(Some(toPb(node)), Some(toPb(configDescribed.config)))))
@@ -107,16 +107,17 @@ class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit
     brokerEvent.event match {
       case event if event.isBrokerCreated =>
         Stats.record(
-          List(nodeTypeTag, createdOperationTypeTag),
+          List(brokerTypeTag, createdOperationTypeTag),
           Measurement.double(totalMessageConsumedMeasure, 1))
         event.brokerCreated match {
           case Some(brokerCreated) =>
-            brokers = brokers + (brokerId -> Broker(brokerId, fromPb(brokerCreated.getNode), fromPb(brokerCreated.config)))
+            val broker = Broker(brokerId, fromPb(brokerCreated.getNode), fromPb(brokerCreated.config))
+            brokers = brokers + (brokerId -> broker)
           case None =>
         }
       case event if event.isBrokerUpdated =>
         Stats.record(
-          List(nodeTypeTag, updatedOperationTypeTag),
+          List(brokerTypeTag, updatedOperationTypeTag),
           Measurement.double(totalMessageConsumedMeasure, 1))
         event.brokerUpdated match {
           case Some(brokerUpdated) =>
