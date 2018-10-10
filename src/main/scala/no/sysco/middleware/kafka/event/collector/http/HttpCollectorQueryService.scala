@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.{ Directives, Route }
 import akka.pattern.ask
 import akka.util.Timeout
 import no.sysco.middleware.kafka.event.collector.cluster.ClusterManager.GetCluster
-import no.sysco.middleware.kafka.event.collector.cluster.BrokerManager.ListNodes
+import no.sysco.middleware.kafka.event.collector.cluster.BrokerManager.ListBrokers
 import no.sysco.middleware.kafka.event.collector.model._
 import no.sysco.middleware.kafka.event.collector.topic.TopicManager.ListTopics
 import spray.json._
@@ -41,7 +41,7 @@ class HttpCollectorQueryService(collector: ActorRef) extends Directives with Jso
       } ~
       path("brokers") {
         get {
-          complete((collector ? ListNodes()).mapTo[Brokers])
+          complete((collector ? ListBrokers()).mapTo[Brokers])
         }
       }
 

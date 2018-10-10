@@ -1,6 +1,6 @@
 package no.sysco.middleware.kafka.event.collector.cluster
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import io.opencensus.scala.Stats
@@ -9,11 +9,12 @@ import no.sysco.middleware.kafka.event.collector.internal.EventRepository.Descri
 import no.sysco.middleware.kafka.event.collector.internal.Parser._
 import no.sysco.middleware.kafka.event.collector.internal.EventRepository
 import no.sysco.middleware.kafka.event.collector.model._
-import no.sysco.middleware.kafka.event.proto.collector.{ BrokerCreated, BrokerEvent, BrokerUpdated }
+import no.sysco.middleware.kafka.event.proto.collector.{BrokerCreated, BrokerEvent, BrokerUpdated}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success }
+import scala.language.postfixOps
+import scala.util.{Failure, Success}
 
 object BrokerManager {
   def props(
@@ -21,7 +22,7 @@ object BrokerManager {
     eventProducer: ActorRef)(implicit executionContext: ExecutionContext): Props =
     Props(new BrokerManager(eventRepository, eventProducer))
 
-  case class ListNodes()
+  case class ListBrokers()
 
 }
 
@@ -42,8 +43,8 @@ class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit
 
   override def receive(): Receive = {
     case nodesDescribed: NodesDescribed => handleNodesDescribed(nodesDescribed)
-    case nodeEvent: BrokerEvent         => handleBrokerEvent(nodeEvent)
-    case ListNodes()                    => handleListNodes()
+    case brokerEvent: BrokerEvent         => handleBrokerEvent(brokerEvent)
+    case ListBrokers()                    => handleListBrokers()
   }
 
   def handleNodesDescribed(nodesDescribed: NodesDescribed): Unit = {
@@ -125,6 +126,6 @@ class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit
     }
   }
 
-  def handleListNodes(): Unit = sender() ! Brokers(brokers.values.toList)
+  def handleListBrokers(): Unit = sender() ! Brokers(brokers.values.toList)
 
 }

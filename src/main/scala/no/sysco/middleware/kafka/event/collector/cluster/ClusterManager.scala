@@ -5,7 +5,7 @@ import java.time.Duration
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import io.opencensus.scala.Stats
 import io.opencensus.scala.stats.Measurement
-import no.sysco.middleware.kafka.event.collector.cluster.BrokerManager.ListNodes
+import no.sysco.middleware.kafka.event.collector.cluster.BrokerManager.ListBrokers
 import no.sysco.middleware.kafka.event.collector.internal.Parser._
 import no.sysco.middleware.kafka.event.collector.model.{ Cluster, ClusterDescribed, NodesDescribed }
 import no.sysco.middleware.kafka.event.proto.collector._
@@ -53,7 +53,7 @@ class ClusterManager(
     case clusterEvent: ClusterEvent         => handleClusterEvent(clusterEvent)
     case GetCluster()                       => handleGetCluster()
     case brokerEvent: BrokerEvent           => brokerManager forward brokerEvent
-    case listNodes: ListNodes               => brokerManager forward listNodes
+    case listNodes: ListBrokers               => brokerManager forward listNodes
   }
 
   def handleDescribeCluster(): Unit = {

@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import no.sysco.middleware.kafka.event.collector.cluster.ClusterManager
 import no.sysco.middleware.kafka.event.collector.cluster.ClusterManager.GetCluster
-import no.sysco.middleware.kafka.event.collector.cluster.BrokerManager.ListNodes
+import no.sysco.middleware.kafka.event.collector.cluster.BrokerManager.ListBrokers
 import no.sysco.middleware.kafka.event.collector.internal.{ EventConsumer, EventProducer, EventRepository }
 import no.sysco.middleware.kafka.event.collector.topic.TopicManager
 import no.sysco.middleware.kafka.event.collector.topic.TopicManager.ListTopics
@@ -66,7 +66,7 @@ class CollectorManager(implicit
   override def receive: Receive = {
     case collectorEvent: CollectorEvent => handleEvent(collectorEvent)
     case getCluster: GetCluster         => clusterEventCollector forward getCluster
-    case listNodes: ListNodes           => clusterEventCollector forward listNodes
+    case listNodes: ListBrokers           => clusterEventCollector forward listNodes
     case listTopics: ListTopics         => topicEventCollector forward listTopics
   }
 
