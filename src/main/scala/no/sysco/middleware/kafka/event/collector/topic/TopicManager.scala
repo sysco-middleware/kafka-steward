@@ -164,27 +164,27 @@ class TopicManager(
       topics.get(topicName) match {
         case None =>
           val configFuture =
-            (eventRepository ? DescribeConfig(EventRepository.ResourceType.Topic, topicName)).mapTo[Config]
+            (eventRepository ? DescribeConfig(EventRepository.ResourceType.Topic, topicName)).mapTo[ConfigDescribed]
           configFuture onComplete {
-            case Success(config) =>
+            case Success(configDescribed) =>
               Stats.record(
                 List(topicTypeTag, createdOperationTypeTag),
                 Measurement.double(totalMessageProducedMeasure, 1))
               eventProducer !
-                TopicEvent(topicName, TopicEvent.Event.TopicUpdated(toPb(topicDescription, config)))
+                TopicEvent(topicName, TopicEvent.Event.TopicUpdated(toPb(topicDescription, configDescribed.config)))
             case Failure(t) => log.error(t, "Error querying config")
           }
         case Some(current) =>
           if (!current.description.equals(topicDescription)) {
             val configFuture =
-              (eventRepository ? DescribeConfig(EventRepository.ResourceType.Topic, topicName)).mapTo[Config]
+              (eventRepository ? DescribeConfig(EventRepository.ResourceType.Topic, topicName)).mapTo[ConfigDescribed]
             configFuture onComplete {
-              case Success(config) =>
+              case Success(configDescribed) =>
                 Stats.record(
                   List(topicTypeTag, updatedOperationTypeTag),
                   Measurement.double(totalMessageProducedMeasure, 1))
                 eventProducer !
-                  TopicEvent(topicName, TopicEvent.Event.TopicUpdated(toPb(topicDescription, config)))
+                  TopicEvent(topicName, TopicEvent.Event.TopicUpdated(toPb(topicDescription, configDescribed.config)))
               case Failure(t) => log.error(t, "Error querying config")
             }
           }

@@ -5,7 +5,7 @@ import java.util.Properties
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
-import no.sysco.middleware.kafka.event.collector.internal.EventRepository.{CollectTopics, DescribeCluster, DescribeTopic}
+import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
 import no.sysco.middleware.kafka.event.collector.model._
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig, NewTopic}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
@@ -59,7 +59,11 @@ class EventRepositorySpec
         val topicDescribed: TopicDescribed = expectMsgType[TopicDescribed]
         assert(topicDescribed.topicAndDescription._1.equals("test-1"))
 
-        //TODO add scenario for config query
+        //FIXME validate empty configs
+        repo ! DescribeConfig(ResourceType.Topic, "test-1")
+        val configDescribed: Config = expectMsgType[Config]
+        assert(configDescribed.entries.isEmpty)
+        //TODO add case when config exists
       }
     }
   }

@@ -135,16 +135,16 @@ class TopicManagerSpec
         // describe 2 internal
         manager ! TopicDescribed(("topic-1", TopicDescription(internal = false, List.empty)))
         eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-1"))
-        eventRepositoryProbe.reply(Config())
+        eventRepositoryProbe.reply(ConfigDescribed(Config()))
         eventProducerProbe.expectMsgType[TopicEvent]
         manager ! TopicDescribed(("topic-2", TopicDescription(internal = false, List.empty)))
         eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-2"))
-        eventRepositoryProbe.reply(Config())
+        eventRepositoryProbe.reply(ConfigDescribed(Config()))
         eventProducerProbe.expectMsgType[TopicEvent]
         // describe 1 NOT internal
         manager ! TopicDescribed(("topic-3", TopicDescription(internal = true, List.empty)))
         eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-3"))
-        eventRepositoryProbe.reply(Config())
+        eventRepositoryProbe.reply(ConfigDescribed(Config()))
         eventProducerProbe.expectMsgType[TopicEvent]
       }
     }
@@ -165,11 +165,11 @@ class TopicManagerSpec
         // describe 2 internal
         manager ! TopicDescribed(("topic-1", TopicDescription(internal = false, List.empty)))
         eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-1"))
-        eventRepositoryProbe.reply(Config())
+        eventRepositoryProbe.reply(ConfigDescribed(Config()))
         eventProducerProbe.expectMsgType[TopicEvent]
         manager ! TopicDescribed(("topic-2", TopicDescription(internal = false, List.empty)))
         eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-2"))
-        eventRepositoryProbe.reply(Config())
+        eventRepositoryProbe.reply(ConfigDescribed(Config()))
         eventProducerProbe.expectMsgType[TopicEvent]
         // describe 1 NOT internal
         manager ! TopicDescribed(("topic-3", TopicDescription(internal = true, List.empty)))

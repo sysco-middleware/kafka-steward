@@ -3,12 +3,13 @@ package no.sysco.middleware.kafka.event.collector.internal
 import java.util.Properties
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import no.sysco.middleware.kafka.event.collector.internal.EventRepository.ResourceType.ResourceType
-import no.sysco.middleware.kafka.event.collector.model.{ ClusterDescribed, TopicDescribed, TopicsCollected }
-import org.apache.kafka.clients.admin.{ AdminClient, AdminClientConfig }
+import no.sysco.middleware.kafka.event.collector.model.{ClusterDescribed, ConfigDescribed, TopicDescribed, TopicsCollected}
+import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig}
 import org.apache.kafka.common.config.ConfigResource
 
+import Parser._
 import scala.collection.JavaConverters._
 
 object EventRepository {
@@ -57,8 +58,8 @@ class EventRepository(adminClient: AdminClient) extends Actor with ActorLogging 
                 thisSender !
                   ClusterDescribed(
                     clusterId,
-                    Some(Parser.fromKafka(node)),
-                    nodes.asScala.toList.map(node => Parser.fromKafka(node)))
+                    Some(fromKafka(node)),
+                    nodes.asScala.toList.map(node => fromKafka(node)))
               }
           }
       }
@@ -81,16 +82,18 @@ class EventRepository(adminClient: AdminClient) extends Actor with ActorLogging 
         thisSender !
           TopicDescribed(
             describeTopic.name,
-            Parser.fromKafka(topicsAndDescription.get(describeTopic.name))))
+            fromKafka(topicsAndDescription.get(describeTopic.name))))
   }
 
   def handleDescribeConfig(config: EventRepository.DescribeConfig): Unit = {
     log.info("Handling describe config {} command.", config)
     val thisSender: ActorRef = sender()
-    adminClient.describeConfigs(List(new ConfigResource(toKafka(config.resourceType), config.name)).asJava)
+    val configRequest = List(new ConfigResource(toKafka(config.resourceType), config.name)).asJava
+    adminClient.describeConfigs(configRequest)
       .all()
       .thenApply { map =>
-        thisSender ! Parser.fromKafka(map.get(config.name))
+        println(s"configmap: $map")
+        thisSender ! ConfigDescribed(fromKafka(map.get(config.name)))
       }
   }
 

@@ -72,27 +72,27 @@ class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit
         brokers.get(brokerId) match {
           case None =>
             val configFuture =
-              (eventRepository ? DescribeConfig(EventRepository.ResourceType.Broker, brokerId)).mapTo[Config]
+              (eventRepository ? DescribeConfig(EventRepository.ResourceType.Broker, brokerId)).mapTo[ConfigDescribed]
             configFuture onComplete {
-              case Success(config) =>
+              case Success(configDescribed) =>
                 Stats.record(
                   List(nodeTypeTag, createdOperationTypeTag),
                   Measurement.double(totalMessageProducedMeasure, 1))
                 eventProducer !
-                  BrokerEvent(brokerId, BrokerEvent.Event.BrokerCreated(BrokerCreated(Some(toPb(node)), Some(toPb(config)))))
+                  BrokerEvent(brokerId, BrokerEvent.Event.BrokerCreated(BrokerCreated(Some(toPb(node)), Some(toPb(configDescribed.config)))))
               case Failure(t) => log.error(t, "Error querying config")
             }
           case Some(thisBroker) =>
             if (!thisBroker.node.equals(node)) {
               val configFuture =
-                (eventRepository ? DescribeConfig(EventRepository.ResourceType.Broker, brokerId)).mapTo[Config]
+                (eventRepository ? DescribeConfig(EventRepository.ResourceType.Broker, brokerId)).mapTo[ConfigDescribed]
               configFuture onComplete {
-                case Success(config) =>
+                case Success(configDescribed) =>
                   Stats.record(
                     List(nodeTypeTag, updatedOperationTypeTag),
                     Measurement.double(totalMessageProducedMeasure, 1))
                   eventProducer !
-                    BrokerEvent(brokerId, BrokerEvent.Event.BrokerUpdated(BrokerUpdated(Some(toPb(node)), Some(toPb(config)))))
+                    BrokerEvent(brokerId, BrokerEvent.Event.BrokerUpdated(BrokerUpdated(Some(toPb(node)), Some(toPb(configDescribed.config)))))
                 case Failure(t) => log.error(t, "Error querying config")
               }
             }

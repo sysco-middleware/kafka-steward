@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import no.sysco.middleware.kafka.event.collector.cluster.BrokerManager.ListBrokers
 import no.sysco.middleware.kafka.event.collector.internal.EventRepository.{DescribeConfig, ResourceType}
-import no.sysco.middleware.kafka.event.collector.model.{Brokers, Config, Node, NodesDescribed}
+import no.sysco.middleware.kafka.event.collector.model._
 import no.sysco.middleware.kafka.event.proto
 import no.sysco.middleware.kafka.event.proto.collector.{BrokerCreated, BrokerEvent, BrokerUpdated}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
@@ -37,7 +37,7 @@ class BrokerManagerSpec
 
         manager ! NodesDescribed(List(Node(0, "localhost", 9092)))
         eventRepository.expectMsg(DescribeConfig(ResourceType.Broker, "0"))
-        eventRepository.reply(Config())
+        eventRepository.reply(ConfigDescribed(Config()))
 
         val brokerEvent = eventProducer.expectMsgType[BrokerEvent]
         assert(brokerEvent.event.isBrokerCreated)
