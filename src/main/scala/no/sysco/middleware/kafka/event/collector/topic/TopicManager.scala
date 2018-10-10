@@ -2,7 +2,7 @@ package no.sysco.middleware.kafka.event.collector.topic
 
 import java.time.Duration
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
@@ -11,22 +11,23 @@ import io.opencensus.scala.stats.Measurement
 import no.sysco.middleware.kafka.event.collector.internal.EventRepository
 import no.sysco.middleware.kafka.event.collector.internal.Parser._
 import no.sysco.middleware.kafka.event.collector.model._
-import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent }
+import no.sysco.middleware.kafka.event.proto.collector.{TopicCreated, TopicDeleted, TopicEvent}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success }
+import scala.language.postfixOps
+import scala.util.{Failure, Success}
 
 object TopicManager {
   def props(
-    pollInterval: Duration,
-    includeInternalTopics: Boolean = true,
-    whitelistTopics: List[String] = List(),
-    blacklistTopics: List[String] = List(),
-    eventRepository: ActorRef,
-    eventProducer: ActorRef)(implicit
-    actorMaterializer: ActorMaterializer,
-    executionContext: ExecutionContext) =
+             pollInterval: Duration,
+             includeInternalTopics: Boolean = true,
+             whitelistTopics: List[String] = List(),
+             blacklistTopics: List[String] = List(),
+             eventRepository: ActorRef,
+             eventProducer: ActorRef)(implicit
+                                      actorMaterializer: ActorMaterializer,
+                                      executionContext: ExecutionContext) =
     Props(
       new TopicManager(
         pollInterval,
@@ -41,24 +42,24 @@ object TopicManager {
 }
 
 /**
- * Observe and publish Topic events.
- *
- * @param pollInterval          Frequency to poll topics from a Kafka Cluster.
- * @param includeInternalTopics If internal topics should be included or not.
- * @param whitelistTopics       list of topic names to include
- * @param blacklistTopics       list of topic names to do not include.
- * @param eventRepository       Reference to Repository where events are stored.
- * @param eventProducer         Reference to Events producer, to publish events.
- */
+  * Observe and publish Topic events.
+  *
+  * @param pollInterval          Frequency to poll topics from a Kafka Cluster.
+  * @param includeInternalTopics If internal topics should be included or not.
+  * @param whitelistTopics       list of topic names to include
+  * @param blacklistTopics       list of topic names to do not include.
+  * @param eventRepository       Reference to Repository where events are stored.
+  * @param eventProducer         Reference to Events producer, to publish events.
+  */
 class TopicManager(
-    pollInterval: Duration,
-    includeInternalTopics: Boolean,
-    whitelistTopics: List[String],
-    blacklistTopics: List[String],
-    eventRepository: ActorRef,
-    eventProducer: ActorRef)(implicit
-    actorMaterializer: ActorMaterializer,
-    val executionContext: ExecutionContext)
+                    pollInterval: Duration,
+                    includeInternalTopics: Boolean,
+                    whitelistTopics: List[String],
+                    blacklistTopics: List[String],
+                    eventRepository: ActorRef,
+                    eventProducer: ActorRef)(implicit
+                                             actorMaterializer: ActorMaterializer,
+                                             val executionContext: ExecutionContext)
   extends Actor with ActorLogging {
 
   import TopicManager._
@@ -67,16 +68,16 @@ class TopicManager(
 
   var topics: Map[String, Topic] = Map()
 
-  implicit val timeout: Timeout = 5 seconds
+  implicit val timeout: Timeout = 10 seconds
 
   override def preStart(): Unit = scheduleCollectTopics
 
   override def receive(): Receive = {
-    case CollectTopics()                  => handleCollectTopics()
+    case CollectTopics() => handleCollectTopics()
     case topicsCollected: TopicsCollected => handleTopicsCollected(topicsCollected)
-    case topicDescribed: TopicDescribed   => handleTopicDescribed(topicDescribed)
-    case topicEvent: TopicEvent           => handleTopicEvent(topicEvent)
-    case ListTopics()                     => handleListTopics()
+    case topicDescribed: TopicDescribed => handleTopicDescribed(topicDescribed)
+    case topicEvent: TopicEvent => handleTopicEvent(topicEvent)
+    case ListTopics() => handleListTopics()
   }
 
   def handleCollectTopics(): Unit = {
@@ -91,9 +92,9 @@ class TopicManager(
   }
 
   /**
-   * Handle current list of topics collected by first checking if any topic has been deleted
-   * and then if any has been updated.
-   */
+    * Handle current list of topics collected by first checking if any topic has been deleted
+    * and then if any has been updated.
+    */
   def handleTopicsCollected(topicsCollected: TopicsCollected): Unit = {
     log.info(s"Handling ${topicsCollected.names.size} topics collected.")
     evaluateCurrentTopics(topics.keys.toList, topicsCollected.names)
@@ -132,64 +133,64 @@ class TopicManager(
         }
       }
       // finally, topic is evaluated
-      name match {
-        case n if !topics.keys.exists(_.equals(n)) =>
-          Stats.record(
-            List(topicTypeTag, createdOperationTypeTag),
-            Measurement.double(totalMessageProducedMeasure, 1))
-          eventProducer ! TopicEvent(name, TopicEvent.Event.TopicCreated(TopicCreated()))
-        case n if topics.keys.exists(_.equals(n)) =>
-          eventRepository ! DescribeTopic(name)
+      if (topics.keys.exists(_.equals(name))) {
+        eventRepository ! DescribeTopic(name)
+      } else {
+        Stats.record(
+          List(topicTypeTag, createdOperationTypeTag),
+          Measurement.double(totalMessageProducedMeasure, 1))
+        eventProducer ! TopicEvent(name, TopicEvent.Event.TopicCreated(TopicCreated()))
       }
       evaluateTopicsCollected(names)
   }
 
   /**
-   * Try to describe topic.
-   * If internal topics are excluded and described topic is internal, method will exit.
-   *
-   * @param topicDescribed TopicDescribed information
-   */
-  def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = topicDescribed.topicAndDescription match {
-    case (topicName: String, topicDescription: TopicDescription) =>
-      log.info("Handling topic {} described.", topicName)
+    * Try to describe topic.
+    * If internal topics are excluded and described topic is internal, method will exit.
+    *
+    * @param topicDescribed TopicDescribed information
+    */
+  def handleTopicDescribed(topicDescribed: TopicDescribed): Unit =
+    topicDescribed.topicAndDescription match {
+      case (topicName: String, topicDescription: TopicDescription) =>
+        log.info("Handling topic {} described.", topicName)
 
-      if (!includeInternalTopics) {
-        if (topicDescription.internal) {
-          log.warning("Internal topic excluded: {}", topicName)
-          return
-        }
-      }
-
-      topics.get(topicName) match {
-        case None =>
-          val configFuture =
-            (eventRepository ? DescribeConfig(EventRepository.ResourceType.Topic, topicName)).mapTo[ConfigDescribed]
-          configFuture onComplete {
-            case Success(configDescribed) =>
-              Stats.record(
-                List(topicTypeTag, createdOperationTypeTag),
-                Measurement.double(totalMessageProducedMeasure, 1))
-              eventProducer !
-                TopicEvent(topicName, TopicEvent.Event.TopicUpdated(toPb(topicDescription, configDescribed.config)))
-            case Failure(t) => log.error(t, "Error querying config")
+        if (!includeInternalTopics) {
+          if (topicDescription.internal) {
+            log.warning("Internal topic excluded: {}", topicName)
+            return
           }
-        case Some(current) =>
-          if (!current.description.equals(topicDescription)) {
+        }
+
+        topics.get(topicName) match {
+          case None =>
             val configFuture =
               (eventRepository ? DescribeConfig(EventRepository.ResourceType.Topic, topicName)).mapTo[ConfigDescribed]
             configFuture onComplete {
               case Success(configDescribed) =>
                 Stats.record(
-                  List(topicTypeTag, updatedOperationTypeTag),
+                  List(topicTypeTag, createdOperationTypeTag),
                   Measurement.double(totalMessageProducedMeasure, 1))
                 eventProducer !
                   TopicEvent(topicName, TopicEvent.Event.TopicUpdated(toPb(topicDescription, configDescribed.config)))
               case Failure(t) => log.error(t, "Error querying config")
             }
-          }
-      }
-  }
+          case Some(current) =>
+            val configFuture =
+              (eventRepository ? DescribeConfig(EventRepository.ResourceType.Topic, topicName)).mapTo[ConfigDescribed]
+            configFuture onComplete {
+              case Success(configDescribed) =>
+                if (!current.equals(Topic(topicName, topicDescription, configDescribed.config))) {
+                  Stats.record(
+                    List(topicTypeTag, updatedOperationTypeTag),
+                    Measurement.double(totalMessageProducedMeasure, 1))
+                  eventProducer !
+                    TopicEvent(topicName, TopicEvent.Event.TopicUpdated(toPb(topicDescription, configDescribed.config)))
+                }
+              case Failure(t) => log.error(t, "Error querying config")
+            }
+        }
+    }
 
   def handleTopicEvent(topicEvent: TopicEvent): Unit = {
     log.info("Handling topic {} event.", topicEvent.name)

@@ -5,11 +5,12 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import no.sysco.middleware.kafka.event.collector.internal.EventRepository.ResourceType.ResourceType
-import no.sysco.middleware.kafka.event.collector.model.{ClusterDescribed, ConfigDescribed, TopicDescribed, TopicsCollected}
+import no.sysco.middleware.kafka.event.collector.internal.Parser._
+import no.sysco.middleware.kafka.event.collector.model._
+import org.apache.kafka.clients.admin
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig}
 import org.apache.kafka.common.config.ConfigResource
 
-import Parser._
 import scala.collection.JavaConverters._
 
 object EventRepository {
@@ -37,10 +38,10 @@ object EventRepository {
 }
 
 /**
- * Query Cluster details from a Kafka cluster.
- *
- * @param adminClient Client to connect to a Kafka Cluster.
- */
+  * Query Cluster details from a Kafka cluster.
+  *
+  * @param adminClient Client to connect to a Kafka Cluster.
+  */
 class EventRepository(adminClient: AdminClient) extends Actor with ActorLogging {
 
   import EventRepository._
@@ -88,27 +89,27 @@ class EventRepository(adminClient: AdminClient) extends Actor with ActorLogging 
   def handleDescribeConfig(config: EventRepository.DescribeConfig): Unit = {
     log.info("Handling describe config {} command.", config)
     val thisSender: ActorRef = sender()
-    val configRequest = List(new ConfigResource(toKafka(config.resourceType), config.name)).asJava
-    adminClient.describeConfigs(configRequest)
+    val configResource = new ConfigResource(toKafka(config.resourceType), config.name)
+    adminClient.describeConfigs(List(configResource).asJava)
       .all()
-      .thenApply { map =>
-        println(s"configmap: $map")
-        thisSender ! ConfigDescribed(fromKafka(map.get(config.name)))
+      .thenApply { configsMap =>
+        val kafkaConfig = configsMap.getOrDefault(configResource, new admin.Config(List().asJava))
+        thisSender ! ConfigDescribed(fromKafka(kafkaConfig))
       }
   }
 
   private def toKafka(resourceType: ResourceType): ConfigResource.Type = resourceType match {
     case ResourceType.Broker => ConfigResource.Type.BROKER
-    case ResourceType.Topic  => ConfigResource.Type.TOPIC
-    case _                   => ConfigResource.Type.UNKNOWN
+    case ResourceType.Topic => ConfigResource.Type.TOPIC
+    case _ => ConfigResource.Type.UNKNOWN
   }
 
   override def postStop(): Unit = adminClient.close(1, TimeUnit.SECONDS)
 
   override def receive(): Receive = {
-    case DescribeCluster()              => handleDescribeCluster()
-    case CollectTopics()                => handleCollectTopics()
-    case describeTopics: DescribeTopic  => handleDescribeTopic(describeTopics)
+    case DescribeCluster() => handleDescribeCluster()
+    case CollectTopics() => handleCollectTopics()
+    case describeTopics: DescribeTopic => handleDescribeTopic(describeTopics)
     case describeConfig: DescribeConfig => handleDescribeConfig(describeConfig)
   }
 }

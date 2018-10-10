@@ -7,10 +7,14 @@ import akka.testkit.{ImplicitSender, TestKit}
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
 import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
 import no.sysco.middleware.kafka.event.collector.model._
+import org.apache.kafka.clients.admin
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig, NewTopic}
+import org.apache.kafka.common.config.ConfigResource
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.collection.JavaConverters._
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 class EventRepositorySpec
   extends TestKit(ActorSystem("test-event-repository"))
@@ -59,11 +63,25 @@ class EventRepositorySpec
         val topicDescribed: TopicDescribed = expectMsgType[TopicDescribed]
         assert(topicDescribed.topicAndDescription._1.equals("test-1"))
 
-        //FIXME validate empty configs
         repo ! DescribeConfig(ResourceType.Topic, "test-1")
-        val configDescribed: Config = expectMsgType[Config]
-        assert(configDescribed.entries.isEmpty)
-        //TODO add case when config exists
+        val configDescribedV0: ConfigDescribed = expectMsgType[ConfigDescribed]
+        assert(configDescribedV0.config.entries.nonEmpty)
+
+        val configResource = new ConfigResource(ConfigResource.Type.TOPIC, "test-1")
+        adminClient.alterConfigs(
+          Map((configResource,
+            new admin.Config(
+              List(new admin.ConfigEntry("cleanup.policy", "compact")).asJava))).asJava)
+          .all()
+          .get()
+
+        repo ! DescribeConfig(ResourceType.Topic, "test-1")
+        val configDescribed: ConfigDescribed = expectMsgType[ConfigDescribed]
+        assert(configDescribed.config.entries.getOrElse("cleanup.policy","").equals("compact"))
+
+        repo ! DescribeConfig(ResourceType.Broker, "0")
+        val configDescribedV2: ConfigDescribed = expectMsgType[ConfigDescribed](5 seconds)
+        assert(configDescribedV2.config.entries.nonEmpty)
       }
     }
   }

@@ -50,6 +50,7 @@ object Parser {
         Config(config.entries.map(entry => entry.name -> entry.value).toMap)
       case None => Config()
     }
+
   def toPb(topicDescription: TopicDescription, config: Config): proto.collector.TopicUpdated =
     proto.collector.TopicUpdated(
       Some(
@@ -64,8 +65,8 @@ object Parser {
       Some(toPb(config)))
 
   def toPb(node: Node): proto.collector.Node =
-    proto.collector.Node(node.id, node.host, node.port, node.rack.orNull)
+    proto.collector.Node(node.id, node.host, node.port, node.rack.getOrElse(""))
 
   def toPb(config: Config): proto.collector.Config =
-    proto.collector.Config(config.entries.map(entry => proto.collector.Config.Entry(entry._1, entry._2)).toSeq)
+    proto.collector.Config(config.entries.map(entry => proto.collector.Config.Entry(entry._1, Option(entry._2).getOrElse(""))).toSeq)
 }

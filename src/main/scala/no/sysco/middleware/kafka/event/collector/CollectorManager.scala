@@ -66,7 +66,7 @@ class CollectorManager(implicit
   override def receive: Receive = {
     case collectorEvent: CollectorEvent => handleEvent(collectorEvent)
     case getCluster: GetCluster         => clusterEventCollector forward getCluster
-    case listNodes: ListBrokers           => clusterEventCollector forward listNodes
+    case listNodes: ListBrokers         => clusterEventCollector forward listNodes
     case listTopics: ListTopics         => topicEventCollector forward listTopics
   }
 

@@ -53,7 +53,7 @@ class ClusterManager(
     case clusterEvent: ClusterEvent         => handleClusterEvent(clusterEvent)
     case GetCluster()                       => handleGetCluster()
     case brokerEvent: BrokerEvent           => brokerManager forward brokerEvent
-    case listNodes: ListBrokers               => brokerManager forward listNodes
+    case listNodes: ListBrokers             => brokerManager forward listNodes
   }
 
   def handleDescribeCluster(): Unit = {

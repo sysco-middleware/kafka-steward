@@ -10,7 +10,7 @@ message CollectorEvent {
   // Types of Entities supported
   enum EntityType {
     CLUSTER = 0;
-    NODE = 1;
+    BROKER = 1;
     TOPIC = 2;
   }
   EntityType entityType = 1;
