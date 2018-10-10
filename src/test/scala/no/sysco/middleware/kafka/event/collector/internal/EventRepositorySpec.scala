@@ -28,7 +28,6 @@ class EventRepositorySpec
 
   "Event Repository" must {
     "send back cluster, nodes, topic and description" in {
-
       withRunningKafkaOnFoundPort(kafkaConfig) { implicit actualConfig =>
         val adminConfigs = new Properties()
         adminConfigs.setProperty(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, s"localhost:${actualConfig.kafkaPort}")
@@ -59,6 +58,8 @@ class EventRepositorySpec
         repo ! DescribeTopic("test-1")
         val topicDescribed: TopicDescribed = expectMsgType[TopicDescribed]
         assert(topicDescribed.topicAndDescription._1.equals("test-1"))
+
+        //TODO add scenario for config query
       }
     }
   }

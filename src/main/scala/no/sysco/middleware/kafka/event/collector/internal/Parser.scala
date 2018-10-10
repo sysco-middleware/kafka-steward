@@ -44,7 +44,9 @@ object Parser {
       case s              => Some(s)
     })
 
-  def toPb(topicDescription: TopicDescription): proto.collector.TopicUpdated =
+  def fromPb(config: proto.collector.Config): Config =
+    Config(config.entries.map(entry => entry.name -> entry.value).toMap)
+  def toPb(topicDescription: TopicDescription, config: Config): proto.collector.TopicUpdated =
     proto.collector.TopicUpdated(
       Some(
         proto.collector.TopicDescription(
@@ -54,8 +56,12 @@ object Parser {
               tpi.id,
               Some(toPb(tpi.leader)),
               tpi.replicas.map(node => toPb(node)),
-              tpi.isr.map(node => toPb(node)))))))
+              tpi.isr.map(node => toPb(node)))))),
+      Some(toPb(config)))
 
-  def toPb(node: Node): proto.collector.Node = proto.collector.Node(node.id, node.host, node.port, node.rack.orNull)
+  def toPb(node: Node): proto.collector.Node =
+    proto.collector.Node(node.id, node.host, node.port, node.rack.orNull)
 
+  def toPb(config: Config): proto.collector.Config =
+    proto.collector.Config(config.entries.map(entry => proto.collector.Config.Entry(entry._1, entry._2)).toSeq)
 }

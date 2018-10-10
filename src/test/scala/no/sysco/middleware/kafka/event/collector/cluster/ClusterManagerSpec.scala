@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 class ClusterManagerSpec
-  extends TestKit(ActorSystem("cluster-topic-manager"))
+  extends TestKit(ActorSystem("test-cluster-manager"))
   with ImplicitSender
   with WordSpecLike
   with Matchers

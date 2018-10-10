@@ -1,32 +1,48 @@
 package no.sysco.middleware.kafka.event.collector.cluster
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import akka.pattern.ask
+import akka.util.Timeout
 import io.opencensus.scala.Stats
 import io.opencensus.scala.stats.Measurement
-import no.sysco.middleware.kafka.event.collector.internal.Parser
+import no.sysco.middleware.kafka.event.collector.internal.EventRepository.DescribeConfig
+import no.sysco.middleware.kafka.event.collector.internal.Parser._
+import no.sysco.middleware.kafka.event.collector.internal.EventRepository
 import no.sysco.middleware.kafka.event.collector.model._
-import no.sysco.middleware.kafka.event.proto.collector.{ NodeCreated, NodeEvent, NodeUpdated }
+import no.sysco.middleware.kafka.event.proto.collector.{ BrokerCreated, BrokerEvent, BrokerUpdated }
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import scala.util.{ Failure, Success }
 
 object BrokerManager {
-  def props(eventProducer: ActorRef): Props = Props(new BrokerManager(eventProducer))
+  def props(
+    eventRepository: ActorRef,
+    eventProducer: ActorRef)(implicit executionContext: ExecutionContext): Props =
+    Props(new BrokerManager(eventRepository, eventProducer))
 
   case class ListNodes()
+
 }
 
 /**
  * Manage Cluster Nodes state.
+ *
  * @param eventProducer Reference to producer, to publish events.
  */
-class BrokerManager(eventProducer: ActorRef) extends Actor with ActorLogging {
+class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit executionContext: ExecutionContext)
+  extends Actor with ActorLogging {
 
   import BrokerManager._
   import no.sysco.middleware.kafka.event.collector.metrics.Metrics._
 
   var brokers: Map[String, Broker] = Map()
 
+  implicit val timeout: Timeout = 5 seconds
+
   override def receive(): Receive = {
     case nodesDescribed: NodesDescribed => handleNodesDescribed(nodesDescribed)
-    case nodeEvent: NodeEvent           => handleNodeEvent(nodeEvent)
+    case nodeEvent: BrokerEvent         => handleBrokerEvent(nodeEvent)
     case ListNodes()                    => handleListNodes()
   }
 
@@ -51,44 +67,59 @@ class BrokerManager(eventProducer: ActorRef) extends Actor with ActorLogging {
     listedNodes match {
       case Nil =>
       case node :: ns =>
-        brokers.get(String.valueOf(node.id)) match {
+        val brokerId = String.valueOf(node.id)
+        brokers.get(brokerId) match {
           case None =>
-            Stats.record(
-              List(nodeTypeTag, createdOperationTypeTag),
-              Measurement.double(totalMessageProducedMeasure, 1))
-            eventProducer ! NodeEvent(node.id, NodeEvent.Event.NodeCreated(NodeCreated(Some(Parser.toPb(node)))))
+            val configFuture =
+              (eventRepository ? DescribeConfig(EventRepository.ResourceType.Broker, brokerId)).mapTo[Config]
+            configFuture onComplete {
+              case Success(config) =>
+                Stats.record(
+                  List(nodeTypeTag, createdOperationTypeTag),
+                  Measurement.double(totalMessageProducedMeasure, 1))
+                eventProducer !
+                  BrokerEvent(brokerId, BrokerEvent.Event.BrokerCreated(BrokerCreated(Some(toPb(node)), Some(toPb(config)))))
+              case Failure(t) => log.error(t, "Error querying config")
+            }
           case Some(thisBroker) =>
             if (!thisBroker.node.equals(node)) {
-              Stats.record(
-                List(nodeTypeTag, updatedOperationTypeTag),
-                Measurement.double(totalMessageProducedMeasure, 1))
-              eventProducer ! NodeEvent(node.id, NodeEvent.Event.NodeUpdated(NodeUpdated(Some(Parser.toPb(node)))))
+              val configFuture =
+                (eventRepository ? DescribeConfig(EventRepository.ResourceType.Broker, brokerId)).mapTo[Config]
+              configFuture onComplete {
+                case Success(config) =>
+                  Stats.record(
+                    List(nodeTypeTag, updatedOperationTypeTag),
+                    Measurement.double(totalMessageProducedMeasure, 1))
+                  eventProducer !
+                    BrokerEvent(brokerId, BrokerEvent.Event.BrokerUpdated(BrokerUpdated(Some(toPb(node)), Some(toPb(config)))))
+                case Failure(t) => log.error(t, "Error querying config")
+              }
             }
         }
         evaluateNodesDescribed(ns)
     }
   }
 
-  def handleNodeEvent(nodeEvent: NodeEvent): Unit = {
-    log.info("Handling node {} event.", nodeEvent.id)
-    val brokerId = String.valueOf(nodeEvent.id)
-    nodeEvent.event match {
-      case event if event.isNodeCreated =>
+  def handleBrokerEvent(brokerEvent: BrokerEvent): Unit = {
+    log.info("Handling node {} event.", brokerEvent.id)
+    val brokerId = String.valueOf(brokerEvent.id)
+    brokerEvent.event match {
+      case event if event.isBrokerCreated =>
         Stats.record(
           List(nodeTypeTag, createdOperationTypeTag),
           Measurement.double(totalMessageConsumedMeasure, 1))
-        event.nodeCreated match {
-          case Some(nodeCreated) =>
-            brokers = brokers + (brokerId -> Broker(brokerId, Parser.fromPb(nodeCreated.getNode)))
+        event.brokerCreated match {
+          case Some(brokerCreated) =>
+            brokers = brokers + (brokerId -> Broker(brokerId, fromPb(brokerCreated.getNode)))
           case None =>
         }
-      case event if event.isNodeUpdated =>
+      case event if event.isBrokerUpdated =>
         Stats.record(
           List(nodeTypeTag, updatedOperationTypeTag),
           Measurement.double(totalMessageConsumedMeasure, 1))
-        event.nodeUpdated match {
-          case Some(nodeUpdated) =>
-            brokers = brokers + (brokerId -> Broker(brokerId, Parser.fromPb(nodeUpdated.getNode)))
+        event.brokerUpdated match {
+          case Some(brokerUpdated) =>
+            brokers = brokers + (brokerId -> Broker(brokerId, fromPb(brokerUpdated.getNode)))
           case None =>
         }
     }

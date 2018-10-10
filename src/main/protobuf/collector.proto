@@ -41,7 +41,7 @@ message ClusterUpdated {
 
 // Supported Node Events
 message BrokerEvent {
-  int32 id = 1;
+  string id = 1;
   oneof event {
     BrokerCreated brokerCreated = 2;
     BrokerUpdated brokerUpdated = 3;

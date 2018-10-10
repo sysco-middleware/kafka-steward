@@ -6,7 +6,7 @@ import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import io.opencensus.scala.Stats
 import io.opencensus.scala.stats.Measurement
 import no.sysco.middleware.kafka.event.collector.cluster.BrokerManager.ListNodes
-import no.sysco.middleware.kafka.event.collector.internal.Parser
+import no.sysco.middleware.kafka.event.collector.internal.Parser._
 import no.sysco.middleware.kafka.event.collector.model.{ Cluster, ClusterDescribed, NodesDescribed }
 import no.sysco.middleware.kafka.event.proto.collector._
 
@@ -40,7 +40,8 @@ class ClusterManager(
   import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
   import no.sysco.middleware.kafka.event.collector.metrics.Metrics._
 
-  val brokerManager: ActorRef = context.actorOf(BrokerManager.props(eventProducer), "broker-manager")
+  val brokerManager: ActorRef =
+    context.actorOf(BrokerManager.props(eventRepository, eventProducer), "broker-manager")
 
   var cluster: Option[Cluster] = None
 
@@ -51,7 +52,7 @@ class ClusterManager(
     case clusterDescribed: ClusterDescribed => handleClusterDescribed(clusterDescribed)
     case clusterEvent: ClusterEvent         => handleClusterEvent(clusterEvent)
     case GetCluster()                       => handleGetCluster()
-    case nodeEvent: NodeEvent               => brokerManager forward nodeEvent
+    case brokerEvent: BrokerEvent           => brokerManager forward brokerEvent
     case listNodes: ListNodes               => brokerManager forward listNodes
   }
 
@@ -69,7 +70,7 @@ class ClusterManager(
   def handleClusterDescribed(clusterDescribed: ClusterDescribed): Unit = {
     log.info("Handling cluster {} described event.", clusterDescribed.id)
     val controller: Option[Node] = clusterDescribed.controller match {
-      case Some(c) => Some(Parser.toPb(c))
+      case Some(c) => Some(toPb(c))
       case None    => None
     }
     cluster match {
@@ -103,7 +104,7 @@ class ClusterManager(
           case Some(clusterCreated) =>
             val controller = clusterCreated.controller match {
               case None       => None
-              case Some(node) => Some(Parser.fromPb(node))
+              case Some(node) => Some(fromPb(node))
             }
             cluster = Some(Cluster(clusterEvent.id, controller))
           case None =>
@@ -116,7 +117,7 @@ class ClusterManager(
           case Some(clusterUpdated) =>
             val controller = clusterUpdated.controller match {
               case None       => None
-              case Some(node) => Some(Parser.fromPb(node))
+              case Some(node) => Some(fromPb(node))
             }
             cluster = Some(Cluster(clusterEvent.id, controller))
           case None =>
