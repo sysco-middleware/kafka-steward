@@ -32,7 +32,7 @@ object Metrics {
   val totalMessageConsumedMeasure: MeasureDouble = tryTotalMessageConsumedMeasure.get
   val totalMessageProducedMeasure: MeasureDouble = tryTotalMessageProducedMeasure.get
   val clusterTypeTag: Tag = Tag(entityTypeTagName, EntityType.CLUSTER.name).get
-  val nodeTypeTag: Tag = Tag(entityTypeTagName, EntityType.NODE.name).get
+  val brokerTypeTag: Tag = Tag(entityTypeTagName, EntityType.BROKER.name).get
   val topicTypeTag: Tag = Tag(entityTypeTagName, EntityType.TOPIC.name).get
   val createdOperationTypeTag: Tag = Tag(entityOperationTagName, "Created").get
   val updatedOperationTypeTag: Tag = Tag(entityOperationTagName, "Updated").get

@@ -1,6 +1,6 @@
 package no.sysco.middleware.kafka.event.collector.internal
 
-import no.sysco.middleware.kafka.event.collector.model.{ Node, Partition, TopicDescription }
+import no.sysco.middleware.kafka.event.collector.model.{ Config, Node, Partition, TopicDescription }
 import no.sysco.middleware.kafka.event.proto
 import org.apache.kafka.clients.admin
 import org.apache.kafka.common
@@ -24,6 +24,8 @@ object Parser {
 
   def fromKafka(node: common.Node): Node = Node(node.id(), node.host(), node.port(), Option(node.rack()))
 
+  def fromKafka(config: admin.Config): Config = Config(config.entries().asScala.map(s => (s.name(), s.value())).toMap)
+
   def fromPb(name: String, topicDescription: proto.collector.TopicDescription): TopicDescription =
     TopicDescription(
       topicDescription.internal,
@@ -42,7 +44,14 @@ object Parser {
       case s              => Some(s)
     })
 
-  def toPb(topicDescription: TopicDescription): proto.collector.TopicUpdated =
+  def fromPb(configOption: Option[proto.collector.Config]): Config =
+    configOption match {
+      case Some(config) =>
+        Config(config.entries.map(entry => entry.name -> entry.value).toMap)
+      case None => Config()
+    }
+
+  def toPb(topicDescription: TopicDescription, config: Config): proto.collector.TopicUpdated =
     proto.collector.TopicUpdated(
       Some(
         proto.collector.TopicDescription(
@@ -52,8 +61,12 @@ object Parser {
               tpi.id,
               Some(toPb(tpi.leader)),
               tpi.replicas.map(node => toPb(node)),
-              tpi.isr.map(node => toPb(node)))))))
+              tpi.isr.map(node => toPb(node)))))),
+      Some(toPb(config)))
 
-  def toPb(node: Node): proto.collector.Node = proto.collector.Node(node.id, node.host, node.port, node.rack.orNull)
+  def toPb(node: Node): proto.collector.Node =
+    proto.collector.Node(node.id, node.host, node.port, node.rack.getOrElse(""))
 
+  def toPb(config: Config): proto.collector.Config =
+    proto.collector.Config(config.entries.map(entry => proto.collector.Config.Entry(entry._1, Option(entry._2).getOrElse(""))).toSeq)
 }

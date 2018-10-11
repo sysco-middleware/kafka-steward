@@ -4,7 +4,7 @@ import java.util.Properties
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{ Actor, ActorLogging, Props }
-import no.sysco.middleware.kafka.event.proto.collector.{ ClusterEvent, CollectorEvent, NodeEvent, TopicEvent }
+import no.sysco.middleware.kafka.event.proto.collector.{ ClusterEvent, CollectorEvent, BrokerEvent, TopicEvent }
 import org.apache.kafka.clients.producer.{ KafkaProducer, Producer, ProducerConfig, ProducerRecord }
 import org.apache.kafka.common.serialization.{ ByteArraySerializer, StringSerializer }
 
@@ -46,12 +46,12 @@ class EventProducer(eventTopic: String, producer: Producer[String, Array[Byte]])
           CollectorEvent.EntityType.CLUSTER,
           clusterEvent.id,
           CollectorEvent.Value.ClusterEvent(clusterEvent))
-    case nodeEvent: NodeEvent =>
+    case brokerEvent: BrokerEvent =>
       self !
         CollectorEvent(
-          CollectorEvent.EntityType.NODE,
-          String.valueOf(nodeEvent.id),
-          CollectorEvent.Value.NodeEvent(nodeEvent))
+          CollectorEvent.EntityType.BROKER,
+          brokerEvent.id,
+          CollectorEvent.Value.BrokerEvent(brokerEvent))
     case topicEvent: TopicEvent =>
       self !
         CollectorEvent(

@@ -3,14 +3,21 @@ package no.sysco.middleware.kafka.event.collector.topic
 import java.time.Duration
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import akka.pattern.ask
 import akka.stream.ActorMaterializer
+import akka.util.Timeout
 import io.opencensus.scala.Stats
 import io.opencensus.scala.stats.Measurement
-import no.sysco.middleware.kafka.event.collector.internal.Parser
+import no.sysco.middleware.kafka.event.collector.internal.EventRepository
+import no.sysco.middleware.kafka.event.collector.internal.Parser._
 import no.sysco.middleware.kafka.event.collector.model._
 import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent }
 
+import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import scala.language.postfixOps
+import scala.util.{ Failure, Success }
 
 object TopicManager {
   def props(
@@ -60,7 +67,9 @@ class TopicManager(
   import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
   import no.sysco.middleware.kafka.event.collector.metrics.Metrics._
 
-  var topicsAndDescription: Map[String, Option[TopicDescription]] = Map()
+  var topics: Map[String, Topic] = Map()
+
+  implicit val timeout: Timeout = 10 seconds
 
   override def preStart(): Unit = scheduleCollectTopics
 
@@ -88,17 +97,20 @@ class TopicManager(
    * and then if any has been updated.
    */
   def handleTopicsCollected(topicsCollected: TopicsCollected): Unit = {
-    log.info(s"Handling ${topicsCollected.names.size} topics collected.")
-    evaluateCurrentTopics(topicsAndDescription.keys.toList, topicsCollected.names)
+    log.info(s"Handling {} topics collected.", topicsCollected.names.size)
+    evaluateCurrentTopics(topics.keys.toList, topicsCollected.names)
     evaluateTopicsCollected(topicsCollected.names)
   }
 
+  @tailrec
   private def evaluateCurrentTopics(currentNames: List[String], names: List[String]): Unit = {
     currentNames match {
       case Nil =>
       case name :: ns =>
         if (!names.contains(name)) {
-          Stats.record(List(topicTypeTag, deletedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
+          Stats.record(
+            List(topicTypeTag, deletedOperationTypeTag),
+            Measurement.double(totalMessageProducedMeasure, 1))
           eventProducer ! TopicEvent(name, TopicEvent.Event.TopicDeleted(TopicDeleted()))
         }
         evaluateCurrentTopics(ns, names)
@@ -123,12 +135,13 @@ class TopicManager(
         }
       }
       // finally, topic is evaluated
-      name match {
-        case n if !topicsAndDescription.keys.exists(_.equals(n)) =>
-          Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
-          eventProducer ! TopicEvent(name, TopicEvent.Event.TopicCreated(TopicCreated()))
-        case n if topicsAndDescription.keys.exists(_.equals(n)) =>
-          eventRepository ! DescribeTopic(name)
+      if (topics.keys.exists(_.equals(name))) {
+        eventRepository ! DescribeTopic(name)
+      } else {
+        Stats.record(
+          List(topicTypeTag, createdOperationTypeTag),
+          Measurement.double(totalMessageProducedMeasure, 1))
+        eventProducer ! TopicEvent(name, TopicEvent.Event.TopicCreated(TopicCreated()))
       }
       evaluateTopicsCollected(names)
   }
@@ -139,58 +152,81 @@ class TopicManager(
    *
    * @param topicDescribed TopicDescribed information
    */
-  def handleTopicDescribed(topicDescribed: TopicDescribed): Unit = topicDescribed.topicAndDescription match {
-    case (topicName: String, topicDescription: TopicDescription) =>
-      log.info("Handling topic {} described.", topicName)
+  def handleTopicDescribed(topicDescribed: TopicDescribed): Unit =
+    topicDescribed.topicAndDescription match {
+      case (topicName: String, topicDescription: TopicDescription) =>
+        log.info("Handling topic {} described.", topicName)
 
-      if (!includeInternalTopics) {
-        if (topicDescription.internal) {
-          log.warning("Internal topic excluded: {}", topicName)
-          return
-        }
-      }
-
-      // assume that assume, that topic name already collected, no null pointers
-      topicsAndDescription(topicName) match {
-        case None =>
-          Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
-          eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
-        case Some(current) =>
-          if (!current.equals(topicDescription)) {
-            Stats.record(List(topicTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageProducedMeasure, 1))
-            eventProducer ! TopicEvent(topicName, TopicEvent.Event.TopicUpdated(Parser.toPb(topicDescription)))
+        if (!includeInternalTopics) {
+          if (topicDescription.internal) {
+            log.warning("Internal topic excluded: {}", topicName)
+            return
           }
-      }
-  }
+        }
+
+        topics.get(topicName) match {
+          case None =>
+            val configFuture =
+              (eventRepository ? DescribeConfig(EventRepository.ResourceType.Topic, topicName)).mapTo[ConfigDescribed]
+            configFuture onComplete {
+              case Success(configDescribed) =>
+                Stats.record(
+                  List(topicTypeTag, createdOperationTypeTag),
+                  Measurement.double(totalMessageProducedMeasure, 1))
+                eventProducer !
+                  TopicEvent(topicName, TopicEvent.Event.TopicUpdated(toPb(topicDescription, configDescribed.config)))
+              case Failure(t) => log.error(t, "Error querying config")
+            }
+          case Some(current) =>
+            val configFuture =
+              (eventRepository ? DescribeConfig(EventRepository.ResourceType.Topic, topicName)).mapTo[ConfigDescribed]
+            configFuture onComplete {
+              case Success(configDescribed) =>
+                if (!current.equals(Topic(topicName, topicDescription, configDescribed.config))) {
+                  Stats.record(
+                    List(topicTypeTag, updatedOperationTypeTag),
+                    Measurement.double(totalMessageProducedMeasure, 1))
+                  eventProducer !
+                    TopicEvent(topicName, TopicEvent.Event.TopicUpdated(toPb(topicDescription, configDescribed.config)))
+                }
+              case Failure(t) => log.error(t, "Error querying config")
+            }
+        }
+    }
 
   def handleTopicEvent(topicEvent: TopicEvent): Unit = {
     log.info("Handling topic {} event.", topicEvent.name)
     topicEvent.event match {
       case event if event.isTopicCreated =>
-        Stats.record(List(topicTypeTag, createdOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
+        Stats.record(
+          List(topicTypeTag, createdOperationTypeTag),
+          Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicCreated match {
-          case Some(_) =>
-            topicsAndDescription = topicsAndDescription + (topicEvent.name -> None)
-            eventRepository ! DescribeTopic(topicEvent.name)
-          case None =>
+          case Some(_) => eventRepository ! DescribeTopic(topicEvent.name)
+          case None => //This scenario should not happen as event is validated before.
         }
       case event if event.isTopicUpdated =>
-        Stats.record(List(topicTypeTag, updatedOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
+        Stats.record(
+          List(topicTypeTag, updatedOperationTypeTag),
+          Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicUpdated match {
           case Some(topicUpdated) =>
-            val topicDescription = Some(Parser.fromPb(topicEvent.name, topicUpdated.topicDescription.get))
-            topicsAndDescription = topicsAndDescription + (topicEvent.name -> topicDescription)
-          case None =>
+            val topicDescription = fromPb(topicEvent.name, topicUpdated.topicDescription.get)
+            val config = fromPb(topicUpdated.config)
+            topics = topics + (topicEvent.name -> Topic(topicEvent.name, topicDescription, config))
+          case None => //This scenario should not happen as event is validated before.
         }
       case event if event.isTopicDeleted =>
-        Stats.record(List(topicTypeTag, deletedOperationTypeTag), Measurement.double(totalMessageConsumedMeasure, 1))
+        Stats.record(
+          List(topicTypeTag, deletedOperationTypeTag),
+          Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicDeleted match {
-          case Some(_) =>
-            topicsAndDescription = topicsAndDescription - topicEvent.name
-          case None =>
+          case Some(_) => topics = topics - topicEvent.name
+          case None => //This scenario should not happen as event is validated before.
         }
     }
   }
 
-  def handleListTopics(): Unit = sender() ! Topics(topicsAndDescription)
+  def handleListTopics(): Unit =
+    sender() ! Topics(topics.values.toList)
 }

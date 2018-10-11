@@ -6,15 +6,16 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import net.manub.embeddedkafka.EmbeddedKafkaConfig
-import no.sysco.middleware.kafka.event.collector.internal.EventRepository.CollectTopics
+import no.sysco.middleware.kafka.event.collector.internal.EventRepository.{ CollectTopics, DescribeConfig, DescribeTopic, ResourceType }
 import no.sysco.middleware.kafka.event.collector.model.{ TopicDescription, _ }
 import no.sysco.middleware.kafka.event.collector.topic.TopicManager.ListTopics
 import no.sysco.middleware.kafka.event.proto
-import no.sysco.middleware.kafka.event.proto.collector._
+import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent, TopicUpdated }
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 class TopicManagerSpec
   extends TestKit(ActorSystem("test-topic-manager"))
@@ -69,12 +70,16 @@ class TopicManagerSpec
         manager ! TopicEvent("topic-2", TopicEvent.Event.TopicCreated(TopicCreated()))
         manager ! TopicEvent("topic-3", TopicEvent.Event.TopicCreated(TopicCreated()))
 
-        // then, current state should have 3 topics
+        // then, 3 topics should be ask to be described
+        eventRepository.expectMsg(DescribeTopic("topic-1"))
+        eventRepository.expectMsg(DescribeTopic("topic-2"))
+        eventRepository.expectMsg(DescribeTopic("topic-3"))
+
+        // and, current state should not have 3 topics, as empty topics are not returned
         manager ! ListTopics()
 
         val topicsV0 = expectMsgType[Topics]
-        assert(topicsV0.topicsAndDescription.size == 3)
-        assert(topicsV0.topicsAndDescription.count(_._2.isEmpty) == 3)
+        assert(topicsV0.topics.isEmpty)
 
         // if a topic is updated
         manager !
@@ -87,12 +92,22 @@ class TopicManagerSpec
                     internal = false,
                     List(proto.collector.TopicDescription.TopicPartitionInfo(0, Some(proto.collector.Node(0, "localhost", 9092, "1")))))))))
 
+        manager !
+          TopicEvent(
+            "topic-2",
+            TopicEvent.Event.TopicUpdated(
+              TopicUpdated(
+                Some(
+                  proto.collector.TopicDescription(
+                    internal = false,
+                    List(proto.collector.TopicDescription.TopicPartitionInfo(0, Some(proto.collector.Node(0, "localhost", 9092, "1")))))))))
+
         // then, current state should reflect topic updated
         manager ! ListTopics()
         val topicsV1 = expectMsgType[Topics]
-        assert(topicsV1.topicsAndDescription.count(_._2.isEmpty) == 2)
-        assert(!topicsV1.topicsAndDescription("topic-1").get.internal)
-        assert(topicsV1.topicsAndDescription("topic-1").get.partitions.size == 1)
+        assert(topicsV1.topics.size == 2)
+        assert(!topicsV1.topics.find(s => s.name.equals("topic-1")).get.description.internal)
+        assert(topicsV1.topics.find(s => s.name.equals("topic-1")).get.description.partitions.size == 1)
 
         // finally, if topic is deleted
         manager ! TopicEvent("topic-2", TopicEvent.Event.TopicDeleted(TopicDeleted()))
@@ -100,8 +115,7 @@ class TopicManagerSpec
         // then, current state should have just 2 topics.
         manager ! ListTopics()
         val topicsV2 = expectMsgType[Topics]
-        assert(topicsV2.topicsAndDescription.count(_._2.isEmpty) == 1)
-        assert(topicsV2.topicsAndDescription.get("topic-2").isEmpty)
+        assert(topicsV2.topics.size == 1)
       }
     }
 
@@ -117,18 +131,19 @@ class TopicManagerSpec
               eventRepository = eventRepositoryProbe.ref,
               eventProducer = eventProducerProbe.ref))
 
-        // collect 3 topics
-        manager ! TopicEvent("topic-1", TopicEvent.Event.TopicCreated(TopicCreated()))
-        manager ! TopicEvent("topic-2", TopicEvent.Event.TopicCreated(TopicCreated()))
-        manager ! TopicEvent("topic-3", TopicEvent.Event.TopicCreated(TopicCreated()))
-
-        // describe 2 internal
-        manager ! TopicDescribed(("topic-1", TopicDescription(internal = true, List.empty)))
+        // describe 2 non internal
+        manager ! TopicDescribed(("topic-1", TopicDescription(internal = false, List.empty)))
+        eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-1"))
+        eventRepositoryProbe.reply(ConfigDescribed(Config()))
         eventProducerProbe.expectMsgType[TopicEvent]
-        manager ! TopicDescribed(("topic-2", TopicDescription(internal = true, List.empty)))
+        manager ! TopicDescribed(("topic-2", TopicDescription(internal = false, List.empty)))
+        eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-2"))
+        eventRepositoryProbe.reply(ConfigDescribed(Config()))
         eventProducerProbe.expectMsgType[TopicEvent]
-        // describe 1 NOT internal
-        manager ! TopicDescribed(("topic-3", TopicDescription(internal = false, List.empty)))
+        // describe 1 internal
+        manager ! TopicDescribed(("topic-3", TopicDescription(internal = true, List.empty)))
+        eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-3"))
+        eventRepositoryProbe.reply(ConfigDescribed(Config()))
         eventProducerProbe.expectMsgType[TopicEvent]
       }
     }
@@ -142,24 +157,23 @@ class TopicManagerSpec
           system.actorOf(
             TopicManager.props(
               pollInterval = Duration.ofSeconds(100),
-              includeInternalTopics = false,
               eventRepository = eventRepositoryProbe.ref,
-              eventProducer = eventProducerProbe.ref))
+              eventProducer = eventProducerProbe.ref,
+              includeInternalTopics = false))
 
-        // collect 3 topics
-        manager ! TopicEvent("topic-1", TopicEvent.Event.TopicCreated(TopicCreated()))
-        manager ! TopicEvent("topic-2", TopicEvent.Event.TopicCreated(TopicCreated()))
-        manager ! TopicEvent("topic-3", TopicEvent.Event.TopicCreated(TopicCreated()))
-
-        // describe 2 internal
-        manager ! TopicDescribed(("topic-1", TopicDescription(internal = true, List.empty)))
-        manager ! TopicDescribed(("topic-2", TopicDescription(internal = true, List.empty)))
-
-        eventProducerProbe.expectNoMessage(500 millis)
-
-        // describe 1 NOT internal
-        manager ! TopicDescribed(("topic-3", TopicDescription(internal = false, List.empty)))
+        // describe 2 non internal
+        manager ! TopicDescribed(("topic-1", TopicDescription(internal = false, List.empty)))
+        eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-1"))
+        eventRepositoryProbe.reply(ConfigDescribed(Config()))
         eventProducerProbe.expectMsgType[TopicEvent]
+        manager ! TopicDescribed(("topic-2", TopicDescription(internal = false, List.empty)))
+        eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-2"))
+        eventRepositoryProbe.reply(ConfigDescribed(Config()))
+        eventProducerProbe.expectMsgType[TopicEvent]
+        // not describing 1 internal
+        manager ! TopicDescribed(("topic-3", TopicDescription(internal = true, List.empty)))
+        eventRepositoryProbe.expectNoMessage()
+        eventProducerProbe.expectNoMessage()
       }
     }
 
@@ -253,9 +267,33 @@ class TopicManagerSpec
               eventProducer = eventProducerProbe.ref))
 
         // collect 3 topics
-        manager ! TopicEvent("topic-1", TopicEvent.Event.TopicCreated(TopicCreated()))
-        manager ! TopicEvent("topic-2", TopicEvent.Event.TopicCreated(TopicCreated()))
-        manager ! TopicEvent("topic-3", TopicEvent.Event.TopicCreated(TopicCreated()))
+        manager !
+          TopicEvent(
+            "topic-1",
+            TopicEvent.Event.TopicUpdated(
+              TopicUpdated(
+                Some(
+                  proto.collector.TopicDescription(
+                    internal = false,
+                    List(proto.collector.TopicDescription.TopicPartitionInfo(0, Some(proto.collector.Node(0, "localhost", 9092, "1")))))))))
+        manager !
+          TopicEvent(
+            "topic-2",
+            TopicEvent.Event.TopicUpdated(
+              TopicUpdated(
+                Some(
+                  proto.collector.TopicDescription(
+                    internal = false,
+                    List(proto.collector.TopicDescription.TopicPartitionInfo(0, Some(proto.collector.Node(0, "localhost", 9092, "1")))))))))
+        manager !
+          TopicEvent(
+            "topic-3",
+            TopicEvent.Event.TopicUpdated(
+              TopicUpdated(
+                Some(
+                  proto.collector.TopicDescription(
+                    internal = false,
+                    List(proto.collector.TopicDescription.TopicPartitionInfo(0, Some(proto.collector.Node(0, "localhost", 9092, "1")))))))))
 
         // if topic-3 is not collected
         manager ! TopicsCollected(List("topic-1", "topic-2"))

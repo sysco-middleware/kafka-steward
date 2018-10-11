@@ -5,8 +5,8 @@ import java.time.Duration
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import io.opencensus.scala.Stats
 import io.opencensus.scala.stats.Measurement
-import no.sysco.middleware.kafka.event.collector.cluster.NodeManager.ListNodes
-import no.sysco.middleware.kafka.event.collector.internal.Parser
+import no.sysco.middleware.kafka.event.collector.cluster.BrokerManager.ListBrokers
+import no.sysco.middleware.kafka.event.collector.internal.Parser._
 import no.sysco.middleware.kafka.event.collector.model.{ Cluster, ClusterDescribed, NodesDescribed }
 import no.sysco.middleware.kafka.event.proto.collector._
 
@@ -40,7 +40,8 @@ class ClusterManager(
   import no.sysco.middleware.kafka.event.collector.internal.EventRepository._
   import no.sysco.middleware.kafka.event.collector.metrics.Metrics._
 
-  val nodeManager: ActorRef = context.actorOf(NodeManager.props(eventProducer), "node-manager")
+  val brokerManager: ActorRef =
+    context.actorOf(BrokerManager.props(eventRepository, eventProducer), "broker-manager")
 
   var cluster: Option[Cluster] = None
 
@@ -51,8 +52,8 @@ class ClusterManager(
     case clusterDescribed: ClusterDescribed => handleClusterDescribed(clusterDescribed)
     case clusterEvent: ClusterEvent         => handleClusterEvent(clusterEvent)
     case GetCluster()                       => handleGetCluster()
-    case nodeEvent: NodeEvent               => nodeManager forward nodeEvent
-    case listNodes: ListNodes               => nodeManager forward listNodes
+    case brokerEvent: BrokerEvent           => brokerManager forward brokerEvent
+    case listNodes: ListBrokers             => brokerManager forward listNodes
   }
 
   def handleDescribeCluster(): Unit = {
@@ -69,7 +70,7 @@ class ClusterManager(
   def handleClusterDescribed(clusterDescribed: ClusterDescribed): Unit = {
     log.info("Handling cluster {} described event.", clusterDescribed.id)
     val controller: Option[Node] = clusterDescribed.controller match {
-      case Some(c) => Some(Parser.toPb(c))
+      case Some(c) => Some(toPb(c))
       case None    => None
     }
     cluster match {
@@ -89,7 +90,7 @@ class ClusterManager(
           eventProducer ! ClusterEvent(clusterDescribed.id, ClusterEvent.Event.ClusterUpdated(ClusterUpdated(controller)))
         }
     }
-    nodeManager ! NodesDescribed(clusterDescribed.nodes)
+    brokerManager ! NodesDescribed(clusterDescribed.nodes)
   }
 
   def handleClusterEvent(clusterEvent: ClusterEvent): Unit = {
@@ -103,10 +104,10 @@ class ClusterManager(
           case Some(clusterCreated) =>
             val controller = clusterCreated.controller match {
               case None       => None
-              case Some(node) => Some(Parser.fromPb(node))
+              case Some(node) => Some(fromPb(node))
             }
             cluster = Some(Cluster(clusterEvent.id, controller))
-          case None =>
+          case None => //This scenario should not happen as event is validated before.
         }
       case event if event.isClusterUpdated =>
         Stats.record(
@@ -116,10 +117,10 @@ class ClusterManager(
           case Some(clusterUpdated) =>
             val controller = clusterUpdated.controller match {
               case None       => None
-              case Some(node) => Some(Parser.fromPb(node))
+              case Some(node) => Some(fromPb(node))
             }
             cluster = Some(Cluster(clusterEvent.id, controller))
-          case None =>
+          case None => //This scenario should not happen as event is validated before.
         }
     }
   }
