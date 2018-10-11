@@ -203,7 +203,7 @@ class TopicManager(
           Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicCreated match {
           case Some(_) => eventRepository ! DescribeTopic(topicEvent.name)
-          case None => //This scenario should not happen as event is validated before.
+          case None    => //This scenario should not happen as event is validated before.
         }
       case event if event.isTopicUpdated =>
         Stats.record(
@@ -222,7 +222,7 @@ class TopicManager(
           Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicDeleted match {
           case Some(_) => topics = topics - topicEvent.name
-          case None => //This scenario should not happen as event is validated before.
+          case None    => //This scenario should not happen as event is validated before.
         }
     }
   }

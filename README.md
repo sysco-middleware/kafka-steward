@@ -22,7 +22,7 @@ Service:
 
 | Port | Description                                                    |
 |------|----------------------------------------------------------------|
-| 8080 | HTTP Port including `/topics`, `/cluster`, and `/nodes`        |
+| 8080 | HTTP Port including `/topics`, `/cluster`, and `/brokers`      |
 | 8081 | Admin Port including Metrics `/metrics` in Prometheus format   |
 
 ### SBT
@@ -49,10 +49,10 @@ Get Cluster:
 curl http://localhost:8080/cluster | jq .
 ```
 
-List Nodes:
+List Brokers:
 
 ```bash
-curl http://localhost:8080/nodes | jq .
+curl http://localhost:8080/brokers | jq .
 ```
 
 List Topics:
