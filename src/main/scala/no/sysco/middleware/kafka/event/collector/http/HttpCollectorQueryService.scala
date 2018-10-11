@@ -13,7 +13,7 @@ import spray.json._
 
 import scala.concurrent.duration._
 
-trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+sealed trait CollectorJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val nodeFormat: RootJsonFormat[Node] = jsonFormat4(Node)
   implicit val configFormat: RootJsonFormat[Config] = jsonFormat1(Config)
   implicit val brokerFormat: RootJsonFormat[Broker] = jsonFormat3(Broker)
@@ -25,7 +25,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val nodesFormat: RootJsonFormat[Brokers] = jsonFormat1(Brokers)
 }
 
-class HttpCollectorQueryService(collector: ActorRef) extends Directives with JsonSupport {
+class HttpCollectorQueryService(collector: ActorRef) extends Directives with CollectorJsonSupport {
   implicit val timeout: Timeout = 5.seconds
 
   val route: Route =

@@ -131,7 +131,7 @@ class TopicManagerSpec
               eventRepository = eventRepositoryProbe.ref,
               eventProducer = eventProducerProbe.ref))
 
-        // describe 2 internal
+        // describe 2 non internal
         manager ! TopicDescribed(("topic-1", TopicDescription(internal = false, List.empty)))
         eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-1"))
         eventRepositoryProbe.reply(ConfigDescribed(Config()))
@@ -140,7 +140,7 @@ class TopicManagerSpec
         eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-2"))
         eventRepositoryProbe.reply(ConfigDescribed(Config()))
         eventProducerProbe.expectMsgType[TopicEvent]
-        // describe 1 NOT internal
+        // describe 1 internal
         manager ! TopicDescribed(("topic-3", TopicDescription(internal = true, List.empty)))
         eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-3"))
         eventRepositoryProbe.reply(ConfigDescribed(Config()))
@@ -161,7 +161,7 @@ class TopicManagerSpec
               eventProducer = eventProducerProbe.ref,
               includeInternalTopics = false))
 
-        // describe 2 internal
+        // describe 2 non internal
         manager ! TopicDescribed(("topic-1", TopicDescription(internal = false, List.empty)))
         eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-1"))
         eventRepositoryProbe.reply(ConfigDescribed(Config()))
@@ -170,7 +170,7 @@ class TopicManagerSpec
         eventRepositoryProbe.expectMsg(DescribeConfig(ResourceType.Topic, "topic-2"))
         eventRepositoryProbe.reply(ConfigDescribed(Config()))
         eventProducerProbe.expectMsgType[TopicEvent]
-        // describe 1 NOT internal
+        // not describing 1 internal
         manager ! TopicDescribed(("topic-3", TopicDescription(internal = true, List.empty)))
         eventRepositoryProbe.expectNoMessage()
         eventProducerProbe.expectNoMessage()

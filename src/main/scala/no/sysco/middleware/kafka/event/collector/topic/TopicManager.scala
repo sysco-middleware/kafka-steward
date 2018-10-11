@@ -13,6 +13,7 @@ import no.sysco.middleware.kafka.event.collector.internal.Parser._
 import no.sysco.middleware.kafka.event.collector.model._
 import no.sysco.middleware.kafka.event.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent }
 
+import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -96,11 +97,12 @@ class TopicManager(
    * and then if any has been updated.
    */
   def handleTopicsCollected(topicsCollected: TopicsCollected): Unit = {
-    log.info(s"Handling ${topicsCollected.names.size} topics collected.")
+    log.info(s"Handling {} topics collected.", topicsCollected.names.size)
     evaluateCurrentTopics(topics.keys.toList, topicsCollected.names)
     evaluateTopicsCollected(topicsCollected.names)
   }
 
+  @tailrec
   private def evaluateCurrentTopics(currentNames: List[String], names: List[String]): Unit = {
     currentNames match {
       case Nil =>
