@@ -202,9 +202,8 @@ class TopicManager(
           List(topicTypeTag, createdOperationTypeTag),
           Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicCreated match {
-          case Some(_) =>
-            eventRepository ! DescribeTopic(topicEvent.name)
-          case None =>
+          case Some(_) => eventRepository ! DescribeTopic(topicEvent.name)
+          case None => //This scenario should not happen as event is validated before.
         }
       case event if event.isTopicUpdated =>
         Stats.record(
@@ -215,16 +214,15 @@ class TopicManager(
             val topicDescription = fromPb(topicEvent.name, topicUpdated.topicDescription.get)
             val config = fromPb(topicUpdated.config)
             topics = topics + (topicEvent.name -> Topic(topicEvent.name, topicDescription, config))
-          case None =>
+          case None => //This scenario should not happen as event is validated before.
         }
       case event if event.isTopicDeleted =>
         Stats.record(
           List(topicTypeTag, deletedOperationTypeTag),
           Measurement.double(totalMessageConsumedMeasure, 1))
         event.topicDeleted match {
-          case Some(_) =>
-            topics = topics - topicEvent.name
-          case None =>
+          case Some(_) => topics = topics - topicEvent.name
+          case None => //This scenario should not happen as event is validated before.
         }
     }
   }

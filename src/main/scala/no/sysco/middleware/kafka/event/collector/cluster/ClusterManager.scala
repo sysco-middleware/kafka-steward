@@ -107,7 +107,7 @@ class ClusterManager(
               case Some(node) => Some(fromPb(node))
             }
             cluster = Some(Cluster(clusterEvent.id, controller))
-          case None =>
+          case None => //This scenario should not happen as event is validated before.
         }
       case event if event.isClusterUpdated =>
         Stats.record(
@@ -120,7 +120,7 @@ class ClusterManager(
               case Some(node) => Some(fromPb(node))
             }
             cluster = Some(Cluster(clusterEvent.id, controller))
-          case None =>
+          case None => //This scenario should not happen as event is validated before.
         }
     }
   }

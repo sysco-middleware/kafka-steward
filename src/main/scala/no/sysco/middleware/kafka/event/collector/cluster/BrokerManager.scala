@@ -113,7 +113,7 @@ class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit
           case Some(brokerCreated) =>
             val broker = Broker(brokerId, fromPb(brokerCreated.getNode), fromPb(brokerCreated.config))
             brokers = brokers + (brokerId -> broker)
-          case None =>
+          case None => //This scenario should not happen as event is validated before.
         }
       case event if event.isBrokerUpdated =>
         Stats.record(
@@ -121,8 +121,9 @@ class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit
           Measurement.double(totalMessageConsumedMeasure, 1))
         event.brokerUpdated match {
           case Some(brokerUpdated) =>
-            brokers = brokers + (brokerId -> Broker(brokerId, fromPb(brokerUpdated.getNode), fromPb(brokerUpdated.config)))
-          case None =>
+            val broker = Broker(brokerId, fromPb(brokerUpdated.getNode), fromPb(brokerUpdated.config))
+            brokers = brokers + (brokerId -> broker)
+          case None => //This scenario should not happen as event is validated before.
         }
     }
   }
