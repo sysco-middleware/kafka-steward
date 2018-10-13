@@ -50,6 +50,32 @@ lazy val collector = (project in file("collector"))
     )
   )
 
+lazy val metadata = (project in file("metadata"))
+  .dependsOn(api)
+  .settings(
+    name := "kafka-steward-metadata",
+    buildSettings,
+    libraryDependencies ++= Seq(
+      akkaStreams,
+      alpakkaKafka,
+      kafkaClients,
+
+      akkaHttp,
+      akkaHttpSpray,
+
+      akkaSlf4j,
+      logback,
+
+      opencensus,
+      opencensusExporterPrometheus,
+      prometheusClientHttpServer,
+
+      scalaTest,
+      akkaTestKit,
+      scalaTestEmbeddedKafka
+    )
+  )
+
 //mainClass in Compile := Some("no.sysco.middleware.kafka.event.collector.Collector")
 
 parallelExecution in Test := false
