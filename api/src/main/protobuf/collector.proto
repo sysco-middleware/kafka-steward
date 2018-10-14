@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package kafka.steward.collector.proto;
+
+option java_package = "no.sysco.middleware.kafka.steward.proto";
+option java_multiple_files = true;
+
+// Events collected will have be covered by this type.
+message CollectorEvent {
+  // Types of Entities supported
+  enum EntityType {
+    CLUSTER = 0;
+    BROKER = 1;
+    TOPIC = 2;
+  }
+  EntityType entityType = 1;
+  string entityId = 2;
+  oneof value {
+    ClusterEvent clusterEvent = 3;
+    BrokerEvent brokerEvent = 4;
+    TopicEvent topicEvent = 5;
+  }
+}
+
+// Supported Cluster Events
+message ClusterEvent {
+  string id = 1;
+  oneof event {
+    ClusterCreated clusterCreated = 2;
+    ClusterUpdated clusterUpdated = 3;
+  }
+}
+
+message ClusterCreated {
+  Node controller = 1;
+}
+
+message ClusterUpdated {
+  Node controller = 1;
+}
+
+// Supported Node Events
+message BrokerEvent {
+  string id = 1;
+  oneof event {
+    BrokerCreated brokerCreated = 2;
+    BrokerUpdated brokerUpdated = 3;
+  }
+}
+
+message BrokerCreated {
+  Node node = 1;
+  Config config = 2;
+}
+
+message BrokerUpdated {
+  Node node = 1;
+  Config config = 2;
+}
+
+// Supported Topic Events
+message TopicEvent {
+  string name = 1;
+  oneof event {
+    TopicCreated topicCreated = 2;
+    TopicUpdated topicUpdated = 3;
+    TopicDeleted topicDeleted = 4;
+  }
+}
+
+message TopicCreated {
+}
+
+message TopicUpdated {
+  TopicDescription topicDescription = 1;
+  Config config = 2;
+}
+
+message TopicDescription {
+  message TopicPartitionInfo {
+    int32 partition = 1;
+    Node leader = 2;
+    repeated Node replicas = 3;
+    repeated Node isr = 4;
+  }
+
+  bool internal = 1;
+  repeated TopicPartitionInfo topicPartitions = 2;
+}
+
+message TopicDeleted {
+}
+
+message Node {
+  int32 id = 1;
+  string host = 2;
+  int32 port = 3;
+  string rack = 4;
+}
+
+message Config {
+  message Entry {
+    string name = 1;
+    string value = 2;
+  }
+  repeated Entry entries = 1;
+}

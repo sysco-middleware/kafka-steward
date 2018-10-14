@@ -1,53 +1,89 @@
 import Dependencies._
 import scalariform.formatter.preferences._
 
-name := "kafka-event-collector"
-organization := "no.sysco.middleware.kafka.event"
-
-lazy val settings = Seq(
+lazy val buildSettings = Seq(
+  organization := "no.sysco.middleware.kafka.steward",
   scalaVersion := "2.12.7",
 )
 
-lazy val root = project
-  .in(file("."))
+lazy val root = (project in file("."))
+  .aggregate(api, collector)
+  .settings(
+    name := "kafka-steward",
+    buildSettings
+  )
   .enablePlugins(JavaAppPackaging)
   .enablePlugins(DockerPlugin)
 
-libraryDependencies ++= Seq(
-  akkaStreams,
-  alpakkaKafka,
-  kafkaClients,
+lazy val api = (project in file("api"))
+  .settings(
+    name := "kafka-steward-api",
+    buildSettings,
+    PB.targets in Compile := Seq(
+      scalapb.gen() -> (sourceManaged in Compile).value
+    )
+  )
 
-  akkaHttp,
-  akkaHttpSpray,
+lazy val collector = (project in file("collector"))
+  .dependsOn(api)
+  .settings(
+    name := "kafka-steward-collector",
+    buildSettings,
+    libraryDependencies ++= Seq(
+      akkaStreams,
+      alpakkaKafka,
+      kafkaClients,
 
-  akkaSlf4j,
-  logback,
+      akkaHttp,
+      akkaHttpSpray,
 
-  opencensus,
-  opencensusExporterPrometheus,
-  prometheusClientHttpServer,
+      akkaSlf4j,
+      logback,
 
-  scalaPb
-)
+      opencensus,
+      opencensusExporterPrometheus,
+      prometheusClientHttpServer,
 
-libraryDependencies ++= Seq(
-  scalaTest,
-  akkaTestKit,
-  scalaTestEmbeddedKafka
-)
+      scalaTest,
+      akkaTestKit,
+      scalaTestEmbeddedKafka
+    )
+  )
 
-mainClass in Compile := Some("no.sysco.middleware.kafka.event.collector.Collector")
+lazy val metadata = (project in file("metadata"))
+  .dependsOn(api)
+  .settings(
+    name := "kafka-steward-metadata",
+    buildSettings,
+    libraryDependencies ++= Seq(
+      akkaStreams,
+      alpakkaKafka,
+      kafkaClients,
+
+      akkaHttp,
+      akkaHttpSpray,
+
+      akkaSlf4j,
+      logback,
+
+      opencensus,
+      opencensusExporterPrometheus,
+      prometheusClientHttpServer,
+
+      scalaTest,
+      akkaTestKit,
+      scalaTestEmbeddedKafka
+    )
+  )
+
+//mainClass in Compile := Some("no.sysco.middleware.kafka.event.collector.Collector")
 
 parallelExecution in Test := false
 
-dockerRepository := Some("syscomiddleware")
-dockerUpdateLatest := true
-dockerBaseImage := "openjdk:8-jre-slim"
+//dockerRepository := Some("syscomiddleware")
+//dockerUpdateLatest := true
+//dockerBaseImage := "openjdk:8-jre-slim"
 
-PB.targets in Compile := Seq(
-  scalapb.gen() -> (sourceManaged in Compile).value
-)
 
 scalariformPreferences := scalariformPreferences.value
   .setPreference(AlignSingleLineCaseStatements, true)
