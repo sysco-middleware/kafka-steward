@@ -1,15 +1,15 @@
 package no.sysco.middleware.kafka.steward.collector
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import no.sysco.middleware.kafka.steward.collector.cluster.BrokerManager.ListBrokers
 import no.sysco.middleware.kafka.steward.collector.cluster.ClusterManager
 import no.sysco.middleware.kafka.steward.collector.cluster.ClusterManager.GetCluster
-import no.sysco.middleware.kafka.steward.collector.internal.{ EventConsumer, EventProducer, EventRepository }
+import no.sysco.middleware.kafka.steward.collector.internal.{EventConsumer, EventProducer, EventRepository}
 import no.sysco.middleware.kafka.steward.collector.topic.TopicManager
 import no.sysco.middleware.kafka.steward.collector.topic.TopicManager.ListTopics
-import no.sysco.middleware.kafka.steward.proto.collector.{ BrokerEvent, ClusterEvent, CollectorEvent, TopicEvent }
+import no.sysco.middleware.kafka.steward.proto.collector.CollectorEvent
 
 import scala.concurrent.ExecutionContext
 
@@ -19,12 +19,12 @@ object CollectorManager {
 }
 
 /**
- * Main application actor. Manage entity managers to collect and publish events from a Kafka Cluster.
- */
+  * Main application actor. Manage entity managers to collect and publish events from a Kafka Cluster.
+  */
 class CollectorManager(implicit
-  actorSystem: ActorSystem,
-  actorMaterializer: ActorMaterializer,
-  executionContext: ExecutionContext)
+                       actorSystem: ActorSystem,
+                       actorMaterializer: ActorMaterializer,
+                       executionContext: ExecutionContext)
   extends Actor with ActorLogging {
   val config: CollectorConfig = new CollectorConfig(ConfigFactory.load())
 
@@ -72,31 +72,12 @@ class CollectorManager(implicit
 
   private def handleEvent(event: CollectorEvent): Unit = {
     event.value match {
-      case value: CollectorEvent.Value if value.isClusterEvent => handleClusterEvent(value.clusterEvent)
-      case value: CollectorEvent.Value if value.isBrokerEvent => handleNodeEvent(value.brokerEvent)
-      case value: CollectorEvent.Value if value.isTopicEvent => handleTopicEvent(value.topicEvent)
+      case value: CollectorEvent.Value if value.isClusterEvent =>
+        clusterEventCollector ! value.clusterEvent.get
+      case value: CollectorEvent.Value if value.isBrokerEvent =>
+        clusterEventCollector ! value.brokerEvent.get
+      case value: CollectorEvent.Value if value.isTopicEvent =>
+        topicEventCollector ! value.topicEvent.get
     }
   }
-
-  private def handleClusterEvent(clusterEvent: Option[ClusterEvent]): Unit = {
-    clusterEvent match {
-      case Some(clusterEventValue) => clusterEventCollector ! clusterEventValue
-      case None =>
-    }
-  }
-
-  private def handleNodeEvent(brokerEvent: Option[BrokerEvent]): Unit = {
-    brokerEvent match {
-      case Some(brokerEventValue) => clusterEventCollector ! brokerEventValue
-      case None =>
-    }
-  }
-
-  private def handleTopicEvent(topicEvent: Option[TopicEvent]): Unit = {
-    topicEvent match {
-      case Some(topicEventValue) => topicEventCollector ! topicEventValue
-      case None =>
-    }
-  }
-
 }

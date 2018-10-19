@@ -1,39 +1,53 @@
 package no.sysco.middleware.kafka.steward.metadata.model
 
-case class Entity(entityId: String, entityType: String)
+import no.sysco.middleware.kafka.steward.metadata.model.EntityStatus.EntityStatus
+import no.sysco.middleware.kafka.steward.metadata.model.EntityType.EntityType
 
-case class Metadata(opMetadata: OpMetadata, orgMetadata: OrgMetadata)
+object EntityType extends Enumeration {
+  type EntityType = Value
 
-case class OpMetadata(entries: Map[String, String])
+  val Topic, TopicPartition, TopicPartitionReplica, Cluster, Rack, Broker, Client, Schema = Value
 
-case class OrgMetadata(entries: Map[String, String])
+}
 
-case class Relation(name: String, source: String, destination: String)
+object EntityStatus extends Enumeration {
+  type EntityStatus = Value
 
-case class Topic(topicName: String, metadata: Metadata, partitions: List[Relation])
-  extends Entity(entityId = topicName, entityType = "Topic")
+  val Current, Removed = Value
+}
 
-case class Partition(topicName: String,
-                     id: Int,
-                     metadata: Metadata,
-                     replicas: List[Relation],
-                     isr: List[Relation])
-  extends Entity(entityId = s"$topicName-$id", entityType = "TopicPartition")
+case class EntityId(id: String)
 
-case class Replica(id: String, leader: Boolean, broker: Relation)
-  extends Entity(entityId = s"", entityType = "TopicPartitionReplica")
+case class Entity(entityId: EntityId, entityType: EntityType)
 
-case class Cluster(id: String, brokers: List[Relation])
-  extends Entity(entityId = id, entityType = "Cluster")
+case class Metadata(opMetadata: OpMetadata = OpMetadata(), orgMetadata: OrgMetadata = OrgMetadata())
 
-case class Broker(id: String, metadata: Metadata)
-  extends Entity(entityId = id, entityType = "Broker")
+case class OpMetadata(entries: Map[String, String] = Map())
 
-case class Rack(id: String, brokers: List[Relation])
-  extends Entity(entityId = id, entityType = "Rack")
+case class OrgMetadata(entries: Map[String, String] = Map())
 
-case class Client(id: String, metadata: Metadata, producing: List[Relation], consuming: List[Relation])
-  extends Entity(entityId = id, entityType = "Client")
+case class Relation(name: String, source: Entity, destination: Entity)
 
-case class Schema(subjectName: String, metadata: Metadata, usedBy: List[Relation])
-extends Entity(entityId = subjectName, entityType = "Schema")
+case class Topic(topicName: String)
+  extends Entity(entityId = EntityId(topicName), entityType = EntityType.Topic)
+
+case class TopicPartition(topicName: String, id: Int, replicas: Seq[TopicPartitionReplica])
+  extends Entity(entityId = EntityId(s"$topicName-$id"), entityType = EntityType.TopicPartition)
+
+case class TopicPartitionReplica(id: Int, leader: Boolean)
+  extends Entity(entityId = EntityId(s""), entityType = EntityType.TopicPartitionReplica)
+
+case class Cluster(id: String, brokers: List[Broker])
+  extends Entity(entityId = EntityId(id), entityType = EntityType.Cluster)
+
+case class Broker(status: EntityStatus, id: String)
+  extends Entity(entityId = EntityId(id), entityType = EntityType.Broker)
+
+case class Rack(status: EntityStatus, id: String, brokers: List[Broker])
+  extends Entity(entityId = EntityId(id), entityType = EntityType.Rack)
+
+case class Client(status: EntityStatus, id: String)
+  extends Entity(entityId = EntityId(id), entityType = EntityType.Client)
+
+case class Schema(status: EntityStatus, subjectName: String)
+  extends Entity(entityId = EntityId(subjectName), entityType = EntityType.Schema)

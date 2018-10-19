@@ -1,6 +1,6 @@
 package no.sysco.middleware.kafka.steward.collector.cluster
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import io.opencensus.scala.Stats
@@ -9,17 +9,17 @@ import no.sysco.middleware.kafka.steward.collector.internal.EventRepository
 import no.sysco.middleware.kafka.steward.collector.internal.EventRepository.DescribeConfig
 import no.sysco.middleware.kafka.steward.collector.internal.Parser._
 import no.sysco.middleware.kafka.steward.collector.model._
-import no.sysco.middleware.kafka.steward.proto.collector.{ BrokerCreated, BrokerEvent, BrokerUpdated }
+import no.sysco.middleware.kafka.steward.proto.collector.{BrokerCreated, BrokerEvent, BrokerUpdated}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 object BrokerManager {
   def props(
-    eventRepository: ActorRef,
-    eventProducer: ActorRef)(implicit executionContext: ExecutionContext): Props =
+             eventRepository: ActorRef,
+             eventProducer: ActorRef)(implicit executionContext: ExecutionContext): Props =
     Props(new BrokerManager(eventRepository, eventProducer))
 
   case class ListBrokers()
@@ -27,10 +27,10 @@ object BrokerManager {
 }
 
 /**
- * Manage Cluster Nodes state.
- *
- * @param eventProducer Reference to producer, to publish events.
- */
+  * Manage Cluster Nodes state.
+  *
+  * @param eventProducer Reference to producer, to publish events.
+  */
 class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit executionContext: ExecutionContext)
   extends Actor with ActorLogging {
 
@@ -109,12 +109,12 @@ class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit
         Stats.record(
           List(brokerTypeTag, createdOperationTypeTag),
           Measurement.double(totalMessageConsumedMeasure, 1))
-        event.brokerCreated match {
-          case Some(brokerCreated) =>
-            val broker = Broker(brokerId, fromPb(brokerCreated.getNode), fromPb(brokerCreated.config))
-            brokers = brokers + (brokerId -> broker)
-          case None => //This scenario should not happen as event is validated before.
-        }
+        val broker =
+          Broker(
+            brokerId,
+            fromPb(event.brokerCreated.get.getNode),
+            fromPb(event.brokerCreated.get.config))
+        brokers = brokers + (brokerId -> broker)
       case event if event.isBrokerUpdated =>
         Stats.record(
           List(brokerTypeTag, updatedOperationTypeTag),

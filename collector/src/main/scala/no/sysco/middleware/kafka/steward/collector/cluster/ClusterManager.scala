@@ -101,28 +101,20 @@ class ClusterManager(
         Stats.record(
           List(clusterTypeTag, createdOperationTypeTag),
           Measurement.double(totalMessageConsumedMeasure, 1))
-        event.clusterCreated match {
-          case Some(clusterCreated) =>
-            val controller = clusterCreated.controller match {
+            val controller = event.clusterCreated.get.controller match {
               case None => None
               case Some(node) => Some(fromPb(node))
             }
             cluster = Some(Cluster(clusterEvent.id, controller))
-          case None => //This scenario should not happen as event is validated before.
-        }
       case event if event.isClusterUpdated =>
         Stats.record(
           List(clusterTypeTag, updatedOperationTypeTag),
           Measurement.double(totalMessageConsumedMeasure, 1))
-        event.clusterUpdated match {
-          case Some(clusterUpdated) =>
-            val controller = clusterUpdated.controller match {
+            val controller = event.clusterUpdated.get.controller match {
               case None => None
               case Some(node) => Some(fromPb(node))
             }
             cluster = Some(Cluster(clusterEvent.id, controller))
-          case None => //This scenario should not happen as event is validated before.
-        }
     }
   }
 

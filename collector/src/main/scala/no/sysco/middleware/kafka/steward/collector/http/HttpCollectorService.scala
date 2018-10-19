@@ -25,7 +25,7 @@ sealed trait CollectorJsonSupport extends SprayJsonSupport with DefaultJsonProto
   implicit val nodesFormat: RootJsonFormat[Brokers] = jsonFormat1(Brokers)
 }
 
-class HttpCollectorQueryService(collector: ActorRef) extends Directives with CollectorJsonSupport {
+class HttpCollectorService(collector: ActorRef) extends Directives with CollectorJsonSupport {
   implicit val timeout: Timeout = 5.seconds
 
   val route: Route =
