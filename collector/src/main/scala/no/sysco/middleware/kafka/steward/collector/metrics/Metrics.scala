@@ -2,7 +2,7 @@ package no.sysco.middleware.kafka.steward.collector.metrics
 
 import io.opencensus.scala.Stats
 import io.opencensus.scala.stats._
-import no.sysco.middleware.kafka.steward.proto.collector.CollectorEvent.EntityType
+import no.sysco.middleware.kafka.steward.proto.entity.Entity.EntityType
 
 import scala.util.Try
 

@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "entity.proto";
+
 package kafka.steward.collector.proto;
 
 option java_package = "no.sysco.middleware.kafka.steward.proto";
@@ -7,18 +9,11 @@ option java_multiple_files = true;
 
 // Events collected will have be covered by this type.
 message CollectorEvent {
-  // Types of Entities supported
-  enum EntityType {
-    CLUSTER = 0;
-    BROKER = 1;
-    TOPIC = 2;
-  }
-  EntityType entityType = 1;
-  string entityId = 2;
+  kafka.steward.entity.proto.Entity entity = 1;
   oneof value {
-    ClusterEvent clusterEvent = 3;
-    BrokerEvent brokerEvent = 4;
-    TopicEvent topicEvent = 5;
+    ClusterEvent clusterEvent = 2;
+    BrokerEvent brokerEvent = 3;
+    TopicEvent topicEvent = 4;
   }
 }
 

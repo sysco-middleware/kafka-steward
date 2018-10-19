@@ -5,6 +5,7 @@ import akka.stream.ActorMaterializer
 import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import net.manub.embeddedkafka.{ EmbeddedKafka, EmbeddedKafkaConfig }
 import no.sysco.middleware.kafka.steward.proto.collector.{ CollectorEvent, TopicCreated, TopicEvent }
+import no.sysco.middleware.kafka.steward.proto.entity.Entity
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.concurrent.ExecutionContext
@@ -40,9 +41,12 @@ class EventProducerConsumerSpec
 
         val event =
           CollectorEvent(
-            CollectorEvent.EntityType.TOPIC,
-            "test",
-            CollectorEvent.Value.TopicEvent(TopicEvent("test", TopicEvent.Event.TopicCreated(TopicCreated()))))
+            Some(
+              Entity(
+                Entity.EntityType.TOPIC,
+                "test")),
+            CollectorEvent.Value.TopicEvent(
+              TopicEvent("test", TopicEvent.Event.TopicCreated(TopicCreated()))))
         eventProducer ! event
 
         val eventReceived = probe.expectMsgType[CollectorEvent](10 seconds)

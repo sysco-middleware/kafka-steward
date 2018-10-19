@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+import "entity.proto";
+
+package kafka.steward.metadata.proto;
+
+option java_package = "no.sysco.middleware.kafka.steward.proto";
+option java_multiple_files = true;
+
+message MetadataEvent {
+  kafka.steward.entity.proto.Entity entity = 1;
+  OpMetadata opMetadata = 2;
+  OrgMetadata orgMetadata = 3;
+  repeated Link links = 4;
+}
+
+message Link {
+  kafka.steward.entity.proto.Entity entity = 1;
+  string description = 2;
+}
+
+message OpMetadata {
+  map<string, string> entries = 1;
+}
+
+message OrgMetadata {
+  map<string, string> entries = 1;
+}
