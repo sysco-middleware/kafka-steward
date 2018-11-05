@@ -5,7 +5,7 @@ import java.util.Properties
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
-import no.sysco.middleware.kafka.steward.collector.internal.EventRepository._
+import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository._
 import no.sysco.middleware.kafka.steward.collector.model.{ClusterDescribed, ConfigDescribed, TopicDescribed, TopicsCollected}
 import org.apache.kafka.clients.admin
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig, NewTopic}
@@ -16,7 +16,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class EventRepositorySpec
+class OriginRepositorySpec
   extends TestKit(ActorSystem("test-event-repository"))
     with ImplicitSender
     with WordSpecLike
@@ -37,7 +37,7 @@ class EventRepositorySpec
         adminConfigs.setProperty(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, s"localhost:${actualConfig.kafkaPort}")
         val adminClient = AdminClient.create(adminConfigs)
 
-        val repo = system.actorOf(EventRepository.props(adminClient))
+        val repo = system.actorOf(OriginRepository.props(adminClient))
         repo ! DescribeCluster()
         val clusterDescribed: ClusterDescribed = expectMsgType[ClusterDescribed]
         assert(!clusterDescribed.id.isEmpty)

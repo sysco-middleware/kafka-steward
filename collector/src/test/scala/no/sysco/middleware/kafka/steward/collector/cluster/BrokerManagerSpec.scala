@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import no.sysco.middleware.kafka.steward.collector.cluster.BrokerManager.ListBrokers
-import no.sysco.middleware.kafka.steward.collector.internal.EventRepository.{ DescribeConfig, ResourceType }
+import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository.{ DescribeConfig, ResourceType }
 import no.sysco.middleware.kafka.steward.collector.model._
 import no.sysco.middleware.kafka.steward.proto.collector.{ BrokerCreated, BrokerEvent, BrokerUpdated }
 import no.sysco.middleware.kafka.steward.proto

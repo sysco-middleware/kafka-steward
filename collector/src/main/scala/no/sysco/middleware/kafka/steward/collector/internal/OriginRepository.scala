@@ -4,7 +4,7 @@ import java.util.Properties
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
-import no.sysco.middleware.kafka.steward.collector.internal.EventRepository.ResourceType.ResourceType
+import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository.ResourceType.ResourceType
 import no.sysco.middleware.kafka.steward.collector.internal.Parser._
 import no.sysco.middleware.kafka.steward.collector.model.{ ClusterDescribed, ConfigDescribed, TopicDescribed, TopicsCollected }
 import org.apache.kafka.clients.admin
@@ -13,13 +13,13 @@ import org.apache.kafka.common.config.ConfigResource
 
 import scala.collection.JavaConverters._
 
-object EventRepository {
-  def props(adminClient: AdminClient): Props = Props(new EventRepository(adminClient))
+object OriginRepository {
+  def props(adminClient: AdminClient): Props = Props(new OriginRepository(adminClient))
 
   def props(bootstrapServers: String): Props = {
     val adminConfigs = new Properties()
     adminConfigs.setProperty(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers)
-    Props(new EventRepository(AdminClient.create(adminConfigs)))
+    Props(new OriginRepository(AdminClient.create(adminConfigs)))
   }
 
   object ResourceType extends Enumeration {
@@ -42,9 +42,9 @@ object EventRepository {
  *
  * @param adminClient Client to connect to a Kafka Cluster.
  */
-class EventRepository(adminClient: AdminClient) extends Actor with ActorLogging {
+class OriginRepository(adminClient: AdminClient) extends Actor with ActorLogging {
 
-  import EventRepository._
+  import OriginRepository._
 
   def handleDescribeCluster(): Unit = {
     log.info("Handling describe cluster command.")
@@ -86,7 +86,7 @@ class EventRepository(adminClient: AdminClient) extends Actor with ActorLogging 
             fromKafka(topicsAndDescription.get(describeTopic.name))))
   }
 
-  def handleDescribeConfig(config: EventRepository.DescribeConfig): Unit = {
+  def handleDescribeConfig(config: OriginRepository.DescribeConfig): Unit = {
     log.info("Handling describe config {} command.", config)
     val thisSender: ActorRef = sender()
     val configResource = new ConfigResource(toKafka(config.resourceType), config.name)

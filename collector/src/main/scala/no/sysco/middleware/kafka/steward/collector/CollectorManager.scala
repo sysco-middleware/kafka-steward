@@ -6,7 +6,7 @@ import com.typesafe.config.ConfigFactory
 import no.sysco.middleware.kafka.steward.collector.cluster.BrokerManager.ListBrokers
 import no.sysco.middleware.kafka.steward.collector.cluster.ClusterManager
 import no.sysco.middleware.kafka.steward.collector.cluster.ClusterManager.GetCluster
-import no.sysco.middleware.kafka.steward.collector.internal.{EventConsumer, EventProducer, EventRepository}
+import no.sysco.middleware.kafka.steward.collector.internal.{CollectorEventConsumer, CollectorEventProducer, OriginRepository}
 import no.sysco.middleware.kafka.steward.collector.topic.TopicManager
 import no.sysco.middleware.kafka.steward.collector.topic.TopicManager.ListTopics
 import no.sysco.middleware.kafka.steward.proto.collector.CollectorEvent
@@ -30,12 +30,12 @@ class CollectorManager(implicit
 
   val eventProducer: ActorRef =
     context.actorOf(
-      EventProducer.props(
+      CollectorEventProducer.props(
         config.Kafka.bootstrapServers,
         config.Collector.eventTopic),
       "event-producer")
   val eventRepository: ActorRef =
-    context.actorOf(EventRepository.props(config.Kafka.bootstrapServers), "event-repository")
+    context.actorOf(OriginRepository.props(config.Kafka.bootstrapServers), "event-repository")
 
   val clusterEventCollector: ActorRef =
     context.actorOf(
@@ -57,7 +57,7 @@ class CollectorManager(implicit
 
   val eventConsumer: ActorRef =
     context.actorOf(
-      EventConsumer.props(
+      CollectorEventConsumer.props(
         self,
         config.Kafka.bootstrapServers,
         config.Collector.eventTopic),

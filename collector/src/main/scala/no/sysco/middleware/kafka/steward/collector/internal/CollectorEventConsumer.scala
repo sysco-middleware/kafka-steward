@@ -13,7 +13,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
 
-object EventConsumer {
+object CollectorEventConsumer {
 
   def props(
     eventCollectorManager: ActorRef,
@@ -21,7 +21,7 @@ object EventConsumer {
     eventTopic: String)(implicit
     actorMaterializer: ActorMaterializer,
     executionContext: ExecutionContext): Props =
-    Props(new EventConsumer(eventCollectorManager, bootstrapServers, eventTopic))
+    Props(new CollectorEventConsumer(eventCollectorManager, bootstrapServers, eventTopic))
 }
 
 /**
@@ -29,7 +29,7 @@ object EventConsumer {
  *
  * @param collectorManager Reference to Collector Manager, which consume this events.
  */
-class EventConsumer(
+class CollectorEventConsumer(
   collectorManager: ActorRef,
   bootstrapServers: String,
   eventTopic: String)(implicit
@@ -43,7 +43,7 @@ class EventConsumer(
       .withPollInterval(500 millis)
       .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false")
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-      .withGroupId("_kafka-event-collector-internal-consumer")
+      .withGroupId("_kafka-steward-collector-internal-consumer")
 
   val killSwitch: UniqueKillSwitch =
     Consumer.plainSource(consumerSettings, Subscriptions.topics(eventTopic))

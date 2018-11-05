@@ -11,6 +11,10 @@ message Entity {
     CLUSTER = 0;
     BROKER = 1;
     TOPIC = 2;
+    TOPIC_PARTITION = 3;
+    TOPIC_PARTITION_REPLICA = 4;
+    CLIENT = 5;
+    SCHEMA = 6;
   }
   EntityType type = 1;
   string id = 2;

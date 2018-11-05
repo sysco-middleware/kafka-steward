@@ -6,12 +6,12 @@ import io.opencensus.exporter.stats.prometheus.PrometheusStatsCollector
 
 import scala.concurrent.ExecutionContext
 
-object Meta extends App {
-  implicit val actorSystem: ActorSystem = ActorSystem("collector-system")
+object Metadata extends App {
+  implicit val actorSystem: ActorSystem = ActorSystem("steward-metadata")
   implicit val actorMaterializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: ExecutionContext = actorSystem.dispatcher
 
-//  val collector = actorSystem.actorOf(CollectorManager.props(), "collector")
+  val meta = actorSystem.actorOf(MetadataManager.props(), "metadata-manager")
 
 //  val httpCollectorQueryService = new HttpCollectorQueryService(collector)
 

@@ -5,8 +5,8 @@ import akka.pattern.ask
 import akka.util.Timeout
 import io.opencensus.scala.Stats
 import io.opencensus.scala.stats.Measurement
-import no.sysco.middleware.kafka.steward.collector.internal.EventRepository
-import no.sysco.middleware.kafka.steward.collector.internal.EventRepository.DescribeConfig
+import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository
+import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository.DescribeConfig
 import no.sysco.middleware.kafka.steward.collector.internal.Parser._
 import no.sysco.middleware.kafka.steward.collector.model._
 import no.sysco.middleware.kafka.steward.proto.collector.{BrokerCreated, BrokerEvent, BrokerUpdated}
@@ -72,7 +72,7 @@ class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit
         brokers.get(brokerId) match {
           case None =>
             val configFuture =
-              (eventRepository ? DescribeConfig(EventRepository.ResourceType.Broker, brokerId)).mapTo[ConfigDescribed]
+              (eventRepository ? DescribeConfig(OriginRepository.ResourceType.Broker, brokerId)).mapTo[ConfigDescribed]
             configFuture onComplete {
               case Success(configDescribed) =>
                 Stats.record(
@@ -84,7 +84,7 @@ class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit
             }
           case Some(thisBroker) =>
             val configFuture =
-              (eventRepository ? DescribeConfig(EventRepository.ResourceType.Broker, brokerId)).mapTo[ConfigDescribed]
+              (eventRepository ? DescribeConfig(OriginRepository.ResourceType.Broker, brokerId)).mapTo[ConfigDescribed]
             configFuture onComplete {
               case Success(configDescribed) =>
                 if (!thisBroker.equals(Broker(brokerId, node, configDescribed.config))) {

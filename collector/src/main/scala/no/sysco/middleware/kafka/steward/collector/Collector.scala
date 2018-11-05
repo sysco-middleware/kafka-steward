@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext
  */
 object Collector extends App {
 
-  implicit val actorSystem: ActorSystem = ActorSystem("collector-system")
+  implicit val actorSystem: ActorSystem = ActorSystem("steward-collector")
   implicit val actorMaterializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: ExecutionContext = actorSystem.dispatcher
 

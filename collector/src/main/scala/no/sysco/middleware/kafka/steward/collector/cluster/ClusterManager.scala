@@ -38,7 +38,7 @@ class ClusterManager(
   extends Actor with ActorLogging {
 
   import ClusterManager._
-  import no.sysco.middleware.kafka.steward.collector.internal.EventRepository._
+  import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository._
   import no.sysco.middleware.kafka.steward.collector.metrics.Metrics._
 
   val brokerManager: ActorRef =

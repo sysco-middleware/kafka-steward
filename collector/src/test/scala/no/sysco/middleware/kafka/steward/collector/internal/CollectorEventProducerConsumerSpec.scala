@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class EventProducerConsumerSpec
+class CollectorEventProducerConsumerSpec
   extends TestKit(ActorSystem("test-event-producer-consumer"))
   with ImplicitSender
   with WordSpecLike
@@ -35,9 +35,9 @@ class EventProducerConsumerSpec
         val bootstrapServers = s"localhost:${actualConfig.kafkaPort}"
         val topicEventTopic = "__collector"
 
-        system.actorOf(EventConsumer.props(probe.ref, bootstrapServers, topicEventTopic))
+        system.actorOf(CollectorEventConsumer.props(probe.ref, bootstrapServers, topicEventTopic))
 
-        val eventProducer = system.actorOf(EventProducer.props(bootstrapServers, topicEventTopic))
+        val eventProducer = system.actorOf(CollectorEventProducer.props(bootstrapServers, topicEventTopic))
 
         val event =
           CollectorEvent(

@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import no.sysco.middleware.kafka.steward.collector.cluster.ClusterManager.GetCluster
-import no.sysco.middleware.kafka.steward.collector.internal.EventRepository.DescribeCluster
+import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository.DescribeCluster
 import no.sysco.middleware.kafka.steward.collector.internal.Parser
 import no.sysco.middleware.kafka.steward.collector.model.{ Cluster, ClusterDescribed }
 import no.sysco.middleware.kafka.steward.proto

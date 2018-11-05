@@ -9,7 +9,7 @@ import no.sysco.middleware.kafka.steward.proto.entity.Entity
 import org.apache.kafka.clients.producer.{ KafkaProducer, Producer, ProducerConfig, ProducerRecord }
 import org.apache.kafka.common.serialization.{ ByteArraySerializer, StringSerializer }
 
-object EventProducer {
+object CollectorEventProducer {
 
   def props(bootstrapServers: String, eventTopic: String): Props = {
     val producerConfigs = new Properties()
@@ -17,17 +17,17 @@ object EventProducer {
     producerConfigs.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, new StringSerializer().getClass.getName)
     producerConfigs.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, new ByteArraySerializer().getClass.getName)
     val producer: Producer[String, Array[Byte]] = new KafkaProducer(producerConfigs)
-    Props(new EventProducer(eventTopic, producer))
+    Props(new CollectorEventProducer(eventTopic, producer))
   }
 
   def props(eventTopic: String, producer: Producer[String, Array[Byte]]) =
-    Props(new EventProducer(eventTopic, producer))
+    Props(new CollectorEventProducer(eventTopic, producer))
 }
 
 /**
  * Publish Cluster events.
  */
-class EventProducer(eventTopic: String, producer: Producer[String, Array[Byte]])
+class CollectorEventProducer(eventTopic: String, producer: Producer[String, Array[Byte]])
   extends Actor with ActorLogging {
 
   def handleEvent(event: CollectorEvent): Unit = {

@@ -8,7 +8,7 @@ import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import io.opencensus.scala.Stats
 import io.opencensus.scala.stats.Measurement
-import no.sysco.middleware.kafka.steward.collector.internal.EventRepository
+import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository
 import no.sysco.middleware.kafka.steward.collector.internal.Parser._
 import no.sysco.middleware.kafka.steward.collector.model._
 import no.sysco.middleware.kafka.steward.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent }
@@ -64,7 +64,7 @@ class TopicManager(
   extends Actor with ActorLogging {
 
   import TopicManager._
-  import no.sysco.middleware.kafka.steward.collector.internal.EventRepository._
+  import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository._
   import no.sysco.middleware.kafka.steward.collector.metrics.Metrics._
 
   var topics: Map[String, Topic] = Map()
@@ -167,7 +167,7 @@ class TopicManager(
         topics.get(topicName) match {
           case None =>
             val configFuture =
-              (eventRepository ? DescribeConfig(EventRepository.ResourceType.Topic, topicName)).mapTo[ConfigDescribed]
+              (eventRepository ? DescribeConfig(OriginRepository.ResourceType.Topic, topicName)).mapTo[ConfigDescribed]
             configFuture onComplete {
               case Success(configDescribed) =>
                 Stats.record(
@@ -179,7 +179,7 @@ class TopicManager(
             }
           case Some(current) =>
             val configFuture =
-              (eventRepository ? DescribeConfig(EventRepository.ResourceType.Topic, topicName)).mapTo[ConfigDescribed]
+              (eventRepository ? DescribeConfig(OriginRepository.ResourceType.Topic, topicName)).mapTo[ConfigDescribed]
             configFuture onComplete {
               case Success(configDescribed) =>
                 if (!current.equals(Topic(topicName, topicDescription, configDescribed.config))) {
