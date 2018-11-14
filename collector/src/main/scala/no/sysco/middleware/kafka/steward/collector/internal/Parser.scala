@@ -9,6 +9,7 @@ import org.apache.kafka.common
  * Translate between sources as Kafka API and Protocol Buffers
  */
 object Parser {
+
   import scala.collection.JavaConverters._
 
   def fromKafka(topicDescription: admin.TopicDescription): TopicDescription =
@@ -46,8 +47,7 @@ object Parser {
 
   def fromPb(configOption: Option[proto.collector.Config]): Config =
     configOption match {
-      case Some(config) =>
-        Config(config.entries.map(entry => entry.name -> entry.value).toMap)
+      case Some(config) => Config(config.entries)
       case None => Config()
     }
 
@@ -67,6 +67,5 @@ object Parser {
   def toPb(node: Node): proto.collector.Node =
     proto.collector.Node(node.id, node.host, node.port, node.rack.getOrElse(""))
 
-  def toPb(config: Config): proto.collector.Config =
-    proto.collector.Config(config.entries.map(entry => proto.collector.Config.Entry(entry._1, Option(entry._2).getOrElse(""))).toSeq)
+  def toPb(config: Config): proto.collector.Config = proto.collector.Config(config.entries)
 }

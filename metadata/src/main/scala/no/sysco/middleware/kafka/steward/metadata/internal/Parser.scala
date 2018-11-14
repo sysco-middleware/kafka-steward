@@ -11,6 +11,9 @@ object Parser {
   def toPb(entityUpdated: EntityUpdated): MetadataEvent =
     MetadataEvent(toPb(entityUpdated.entity), toPb(entityUpdated.opMetadata), toPb(entityUpdated.orgMetadata))
 
+  def toPb(entityDeleted: EntityDeleted): MetadataEvent =
+    MetadataEvent(toPb(entityDeleted.entity), deleted = true)
+
   def toPb(entity: Entity): Option[proto.entity.Entity] =
     Some(proto.entity.Entity(
       entity.entityType match {
@@ -18,8 +21,7 @@ object Parser {
         case EntityType.Cluster => proto.entity.Entity.EntityType.CLUSTER
         case EntityType.Topic => proto.entity.Entity.EntityType.TOPIC
       },
-      entity.entityId.id
-    ))
+      entity.entityId.id))
 
   def toPb(opMetadata: OpMetadata): Option[proto.metadata.OpMetadata] =
     Some(proto.metadata.OpMetadata(opMetadata.entries))

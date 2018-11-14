@@ -11,7 +11,7 @@ message MetadataEvent {
   kafka.steward.entity.proto.Entity entity = 1;
   OpMetadata opMetadata = 2;
   OrgMetadata orgMetadata = 3;
-  bool exists = 4;
+  bool deleted = 4;
 }
 
 message OpMetadata {

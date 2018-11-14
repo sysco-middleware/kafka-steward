@@ -3,12 +3,12 @@ package no.sysco.middleware.kafka.steward.metadata.internal
 import java.util.Properties
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{ Actor, ActorLogging, Props }
 import no.sysco.middleware.kafka.steward.metadata.internal.Parser._
-import no.sysco.middleware.kafka.steward.metadata.model.{EntityCreated, EntityUpdated}
+import no.sysco.middleware.kafka.steward.metadata.model.{ EntityCreated, EntityUpdated }
 import no.sysco.middleware.kafka.steward.proto.metadata.MetadataEvent
-import org.apache.kafka.clients.producer.{KafkaProducer, Producer, ProducerConfig, ProducerRecord}
-import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
+import org.apache.kafka.clients.producer.{ KafkaProducer, Producer, ProducerConfig, ProducerRecord }
+import org.apache.kafka.common.serialization.{ ByteArraySerializer, StringSerializer }
 
 object EntityEventProducer {
   def props(bootstrapServers: String, eventTopic: String): Props = {

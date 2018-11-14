@@ -1,15 +1,14 @@
-package no.sysco.middleware.kafka.steward.collector.cluster
+package no.sysco.middleware.kafka.steward.collector
 
 import java.time.Duration
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import io.opencensus.scala.Stats
 import io.opencensus.scala.stats.Measurement
-import no.sysco.middleware.kafka.steward.collector.cluster.BrokerManager.ListBrokers
 import no.sysco.middleware.kafka.steward.collector.internal.Parser._
-import no.sysco.middleware.kafka.steward.collector.model.{ Cluster, ClusterDescribed, NodesDescribed }
+import no.sysco.middleware.kafka.steward.collector.model.{Cluster, ClusterDescribed, NodesDescribed}
 import no.sysco.middleware.kafka.steward.proto.collector
-import no.sysco.middleware.kafka.steward.proto.collector.{ BrokerEvent, ClusterCreated, ClusterEvent, ClusterUpdated }
+import no.sysco.middleware.kafka.steward.proto.collector.{BrokerEvent, ClusterCreated, ClusterEvent, ClusterUpdated}
 
 import scala.concurrent.ExecutionContext
 
@@ -101,20 +100,20 @@ class ClusterManager(
         Stats.record(
           List(clusterTypeTag, createdOperationTypeTag),
           Measurement.double(totalMessageConsumedMeasure, 1))
-            val controller = event.clusterCreated.get.controller match {
-              case None => None
-              case Some(node) => Some(fromPb(node))
-            }
-            cluster = Some(Cluster(clusterEvent.id, controller))
+        val controller = event.clusterCreated.get.controller match {
+          case None => None
+          case Some(node) => Some(fromPb(node))
+        }
+        cluster = Some(Cluster(clusterEvent.id, controller))
       case event if event.isClusterUpdated =>
         Stats.record(
           List(clusterTypeTag, updatedOperationTypeTag),
           Measurement.double(totalMessageConsumedMeasure, 1))
-            val controller = event.clusterUpdated.get.controller match {
-              case None => None
-              case Some(node) => Some(fromPb(node))
-            }
-            cluster = Some(Cluster(clusterEvent.id, controller))
+        val controller = event.clusterUpdated.get.controller match {
+          case None => None
+          case Some(node) => Some(fromPb(node))
+        }
+        cluster = Some(Cluster(clusterEvent.id, controller))
     }
   }
 

@@ -1,8 +1,8 @@
 package no.sysco.middleware.kafka.steward.metadata
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import com.typesafe.config.ConfigFactory
-import no.sysco.middleware.kafka.steward.metadata.internal.{CollectorManager, EntityEventProducer}
+import no.sysco.middleware.kafka.steward.metadata.internal.{ CollectorManager, EntityEventProducer }
 
 object MetadataManager {
   def props(): Props = Props(new MetadataManager())

@@ -94,9 +94,5 @@ message Node {
 }
 
 message Config {
-  message Entry {
-    string name = 1;
-    string value = 2;
-  }
-  repeated Entry entries = 1;
+  map<string, string> entries = 1;
 }

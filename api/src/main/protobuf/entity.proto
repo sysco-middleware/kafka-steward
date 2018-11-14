@@ -18,4 +18,5 @@ message Entity {
   }
   EntityType type = 1;
   string id = 2;
+  bool deleted = 3;
 }

@@ -1,34 +1,35 @@
 package no.sysco.middleware.kafka.steward.metadata.internal
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.kafka.scaladsl.Consumer
-import akka.kafka.{ConsumerSettings, Subscriptions}
-import akka.stream.scaladsl.{Keep, Sink}
-import akka.stream.{ActorMaterializer, KillSwitches, UniqueKillSwitch}
+import akka.kafka.{ ConsumerSettings, Subscriptions }
+import akka.stream.scaladsl.{ Keep, Sink }
+import akka.stream.{ ActorMaterializer, KillSwitches, UniqueKillSwitch }
 import no.sysco.middleware.kafka.steward.proto.metadata.MetadataEvent
 import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.common.serialization.{ByteArrayDeserializer, StringDeserializer}
+import org.apache.kafka.common.serialization.{ ByteArrayDeserializer, StringDeserializer }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 object EntityEventConsumer {
 
-  def props(entityManager: ActorRef,
-            bootstrapServers: String,
-            eventTopic: String)
-           (implicit
-            actorMaterializer: ActorMaterializer,
-            executionContext: ExecutionContext): Props =
+  def props(
+    entityManager: ActorRef,
+    bootstrapServers: String,
+    eventTopic: String)(implicit
+    actorMaterializer: ActorMaterializer,
+    executionContext: ExecutionContext): Props =
     Props(new EntityEventConsumer(entityManager, bootstrapServers, eventTopic))
 }
 
-class EntityEventConsumer(entityManager: ActorRef,
-                          bootstrapServers: String,
-                          eventTopic: String)
-                         (implicit actorMaterializer: ActorMaterializer,
-                          executionContext: ExecutionContext) extends Actor with ActorLogging {
+class EntityEventConsumer(
+  entityManager: ActorRef,
+  bootstrapServers: String,
+  eventTopic: String)(implicit
+  actorMaterializer: ActorMaterializer,
+  executionContext: ExecutionContext) extends Actor with ActorLogging {
 
   val consumerSettings: ConsumerSettings[String, Array[Byte]] =
     ConsumerSettings(context.system, new StringDeserializer, new ByteArrayDeserializer)

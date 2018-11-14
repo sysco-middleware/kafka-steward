@@ -1,7 +1,5 @@
 syntax = "proto3";
 
-import "entity.proto";
-
 package kafka.steward.metadata.proto;
 
 option java_package = "no.sysco.middleware.kafka.steward.proto";

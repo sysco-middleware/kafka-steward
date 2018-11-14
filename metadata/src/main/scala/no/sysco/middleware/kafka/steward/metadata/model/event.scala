@@ -6,4 +6,4 @@ case class EntityCreated(entity: Entity, opMetadata: OpMetadata) extends Event
 
 case class EntityUpdated(entity: Entity, opMetadata: OpMetadata, orgMetadata: OrgMetadata) extends Event
 
-case class EntityDeleted(entity: Entity) extends Event
+case class EntityDeleted(entity: Entity, opMetadata: OpMetadata, orgMetadata: OrgMetadata) extends Event

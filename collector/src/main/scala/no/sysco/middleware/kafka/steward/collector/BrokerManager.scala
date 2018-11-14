@@ -1,4 +1,4 @@
-package no.sysco.middleware.kafka.steward.collector.cluster
+package no.sysco.middleware.kafka.steward.collector
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
@@ -18,8 +18,8 @@ import scala.util.{Failure, Success}
 
 object BrokerManager {
   def props(
-             eventRepository: ActorRef,
-             eventProducer: ActorRef)(implicit executionContext: ExecutionContext): Props =
+    eventRepository: ActorRef,
+    eventProducer: ActorRef)(implicit executionContext: ExecutionContext): Props =
     Props(new BrokerManager(eventRepository, eventProducer))
 
   case class ListBrokers()
@@ -27,10 +27,10 @@ object BrokerManager {
 }
 
 /**
-  * Manage Cluster Nodes state.
-  *
-  * @param eventProducer Reference to producer, to publish events.
-  */
+ * Manage Cluster Nodes state.
+ *
+ * @param eventProducer Reference to producer, to publish events.
+ */
 class BrokerManager(eventRepository: ActorRef, eventProducer: ActorRef)(implicit executionContext: ExecutionContext)
   extends Actor with ActorLogging {
 

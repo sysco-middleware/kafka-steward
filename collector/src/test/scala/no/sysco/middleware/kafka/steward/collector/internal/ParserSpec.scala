@@ -40,10 +40,10 @@ class ParserSpec extends FlatSpec {
   it should "convert a PB Config into a Local Config and vice-versa" in {
     val configPb =
       proto.collector.Config(
-        Seq(
-          proto.collector.Config.Entry("k1", "v1"),
-          proto.collector.Config.Entry("k2", "v2"),
-          proto.collector.Config.Entry("k3", "v3"),
+        Map(
+          ("k1", "v1"),
+          ("k2", "v2"),
+          ("k3", "v3"),
         ))
     val config = Parser.fromPb(Some(configPb))
     assert(config.entries.size == 3)
