@@ -22,8 +22,8 @@ object Metadata extends App {
   PrometheusStatsCollector.createAndRegister()
   val server = new io.prometheus.client.exporter.HTTPServer(8081)
 
-  //  sys.addShutdownHook(
-  //    bindingFuture
-  //      .flatMap(_.unbind())
-  //      .onComplete(_ => actorSystem.terminate()))
+  sys.addShutdownHook(
+    bindingFuture
+      .flatMap(_.unbind())
+      .onComplete(_ => actorSystem.terminate()))
 }
