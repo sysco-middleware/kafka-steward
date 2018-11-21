@@ -12,7 +12,8 @@ import scala.collection.JavaConverters._
 
 object UpstreamSource {
 
-  def props(adminClient: AdminClient, topicsRef: ActorRef, pollFrequency: Duration): Props = Props(new UpstreamSource(adminClient, topicsRef, pollFrequency: Duration))
+  def props(adminClient: AdminClient, topicsRef: ActorRef, pollFrequency: Duration): Props =
+    Props(new UpstreamSource(adminClient, topicsRef, pollFrequency: Duration))
 
   case class ListTopics()
 
@@ -20,7 +21,8 @@ object UpstreamSource {
 
 }
 
-class UpstreamSource(adminClient: AdminClient, topicsRef: ActorRef, pollFrequency: Duration) extends Actor with ActorLogging {
+class UpstreamSource(adminClient: AdminClient, topicsRef: ActorRef, pollFrequency: Duration)
+  extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case ListTopics() => handleListTopics()
@@ -37,7 +39,6 @@ class UpstreamSource(adminClient: AdminClient, topicsRef: ActorRef, pollFrequenc
     }
 
   private def handleDescribeTopics(describeTopics: DescribeTopics): Unit = {
-
     val topicDescriptionsFuture = adminClient.describeTopics(describeTopics.topics.asJava).all()
     val topicConfigsFuture = adminClient.describeConfigs(describeTopics.topics.map {
       topic => new ConfigResource(ConfigResource.Type.TOPIC, topic)

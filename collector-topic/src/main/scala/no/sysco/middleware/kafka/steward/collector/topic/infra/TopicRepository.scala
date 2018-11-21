@@ -11,7 +11,8 @@ object TopicRepository {
     Props(new TopicRepository(producer, topic))
 }
 
-class TopicRepository(producer: Producer[Array[Byte], Array[Byte]], topic: String) extends Actor with ActorLogging {
+class TopicRepository(producer: Producer[Array[Byte], Array[Byte]], topic: String)
+  extends Actor with ActorLogging {
   override def receive: Receive = {
     case topicCreated: TopicCreated => handleTopicCreated(topicCreated)
     case topicUpdated: TopicUpdated => handleTopicUpdated(topicUpdated)

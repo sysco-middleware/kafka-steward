@@ -16,7 +16,9 @@ object TopicCollector {
     producer: Producer[Array[Byte], Array[Byte]],
     consumer: Consumer[Array[Byte], Array[Byte]],
     eventTopic: String,
-    pollFrequency: Duration): Props = Props(new TopicCollector(adminClient, producer, consumer, eventTopic, pollFrequency))
+    pollFrequency: Duration): Props =
+    Props(
+      new TopicCollector(adminClient, producer, consumer, eventTopic, pollFrequency))
 }
 
 class TopicCollector(

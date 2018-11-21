@@ -44,5 +44,11 @@ object Main extends App {
 
   val consumer = new KafkaConsumer[Array[Byte], Array[Byte]](kafkaConsumerClient)
 
-  system.actorOf(TopicCollector.props(adminClient, producer, consumer, appConfig.Collector.eventTopic, appConfig.Collector.pollInterval))
+  system.actorOf(
+    TopicCollector.props(
+      adminClient,
+      producer,
+      consumer,
+      appConfig.Collector.eventTopic,
+      appConfig.Collector.pollInterval))
 }
