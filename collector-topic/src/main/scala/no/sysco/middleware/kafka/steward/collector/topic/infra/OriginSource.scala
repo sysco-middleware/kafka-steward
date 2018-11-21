@@ -53,6 +53,8 @@ class OriginSource(consumer: Consumer[Array[Byte], Array[Byte]], topic: String, 
                 Config(topicUpdated.config.get.entries),
                 topicUpdated.internal))
       }
+
+      self ! Poll()
     }
   }
 

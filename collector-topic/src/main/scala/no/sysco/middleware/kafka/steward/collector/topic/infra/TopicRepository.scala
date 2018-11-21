@@ -1,10 +1,10 @@
 package no.sysco.middleware.kafka.steward.collector.topic.infra
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{ Actor, ActorLogging, Props }
 import no.sysco.middleware.kafka.steward.collector.proto
 import no.sysco.middleware.kafka.steward.collector.proto.topic._
-import no.sysco.middleware.kafka.steward.collector.topic.core.model.{TopicCreated, TopicDeleted, TopicUpdated}
-import org.apache.kafka.clients.producer.{Callback, Producer, ProducerRecord}
+import no.sysco.middleware.kafka.steward.collector.topic.core.model.{ TopicCreated, TopicDeleted, TopicUpdated }
+import org.apache.kafka.clients.producer.{ Callback, Producer, ProducerRecord }
 
 object TopicRepository {
   def props(producer: Producer[Array[Byte], Array[Byte]], topic: String): Props =

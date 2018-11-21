@@ -1,5 +1,7 @@
 package no.sysco.middleware.kafka.steward.collector.topic.infra
 
+import java.time.Duration
+
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import no.sysco.middleware.kafka.steward.collector.topic.core.model._
 import no.sysco.middleware.kafka.steward.collector.topic.infra.UpstreamSource.{ DescribeTopics, ListTopics }
@@ -10,7 +12,7 @@ import scala.collection.JavaConverters._
 
 object UpstreamSource {
 
-  def props(adminClient: AdminClient, topicsRef: ActorRef): Props = Props(new UpstreamSource(adminClient, topicsRef))
+  def props(adminClient: AdminClient, topicsRef: ActorRef, pollFrequency: Duration): Props = Props(new UpstreamSource(adminClient, topicsRef, pollFrequency: Duration))
 
   case class ListTopics()
 
@@ -18,7 +20,7 @@ object UpstreamSource {
 
 }
 
-class UpstreamSource(adminClient: AdminClient, topicsRef: ActorRef) extends Actor with ActorLogging {
+class UpstreamSource(adminClient: AdminClient, topicsRef: ActorRef, pollFrequency: Duration) extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case ListTopics() => handleListTopics()
@@ -30,6 +32,8 @@ class UpstreamSource(adminClient: AdminClient, topicsRef: ActorRef) extends Acto
       val topicsCollected = topics.asScala
       topicsRef ! TopicsCollected(topicsCollected.toList)
       self ! DescribeTopics(topicsCollected.toSet)
+
+      context.system.scheduler.scheduleOnce(pollFrequency, self, ListTopics(), context.dispatcher, self)
     }
 
   private def handleDescribeTopics(describeTopics: DescribeTopics): Unit = {

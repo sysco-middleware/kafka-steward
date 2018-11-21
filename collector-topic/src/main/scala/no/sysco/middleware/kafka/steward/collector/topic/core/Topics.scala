@@ -28,7 +28,7 @@ class Topics(clusterId: ClusterId, remote: ActorRef) extends Actor with ActorLog
   }
 
   @tailrec
-  final def checkTopicsRemoved(currentTopics: List[String], topicsCollected: List[String]): Unit =
+  private final def checkTopicsRemoved(currentTopics: List[String], topicsCollected: List[String]): Unit =
     currentTopics match {
       case Nil => // do nothing
       case topic :: topics =>
@@ -40,7 +40,7 @@ class Topics(clusterId: ClusterId, remote: ActorRef) extends Actor with ActorLog
     }
 
   @tailrec
-  final def checkTopicsCreated(topicsCollected: List[String]): Unit =
+  private final def checkTopicsCreated(topicsCollected: List[String]): Unit =
     topicsCollected match {
       case Nil => // do nothing
       case topic :: topics =>
