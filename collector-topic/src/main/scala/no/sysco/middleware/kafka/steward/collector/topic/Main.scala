@@ -5,7 +5,7 @@ import java.util.Properties
 import akka.actor.ActorSystem
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.apache.kafka.clients.CommonClientConfigs
-import org.apache.kafka.clients.admin.{ AdminClient, KafkaAdminClient }
+import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.consumer.{ ConsumerConfig, KafkaConsumer }
 import org.apache.kafka.clients.producer.{ KafkaProducer, ProducerConfig }
 import org.apache.kafka.common.serialization.{ ByteArrayDeserializer, ByteArraySerializer }
