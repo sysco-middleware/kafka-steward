@@ -5,11 +5,11 @@ import java.time.Duration
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
-import no.sysco.middleware.kafka.steward.collector.cluster.ClusterManager.GetCluster
+import no.sysco.middleware.kafka.steward.collector.ClusterManager
+import no.sysco.middleware.kafka.steward.collector.ClusterManager.GetCluster
 import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository.DescribeCluster
 import no.sysco.middleware.kafka.steward.collector.internal.Parser
 import no.sysco.middleware.kafka.steward.collector.model.{ Cluster, ClusterDescribed }
-import no.sysco.middleware.kafka.steward.proto
 import no.sysco.middleware.kafka.steward.proto.collector.{ ClusterCreated, ClusterEvent, ClusterUpdated, Node }
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 

@@ -1,7 +1,7 @@
 package no.sysco.middleware.kafka.steward.metadata
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import no.sysco.middleware.kafka.steward.metadata.EntityManager.{DeleteEntity, OpMetadataUpdated, UpdateOrgMetadata}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import no.sysco.middleware.kafka.steward.metadata.EntityManager.{ DeleteEntity, OpMetadataUpdated, UpdateOrgMetadata }
 import no.sysco.middleware.kafka.steward.metadata.internal.Parser._
 import no.sysco.middleware.kafka.steward.metadata.model._
 import no.sysco.middleware.kafka.steward.proto.metadata.MetadataEvent

@@ -1,9 +1,9 @@
 package no.sysco.middleware.kafka.steward.metadata.internal
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import no.sysco.middleware.kafka.steward.metadata.EntityManager.{DeleteEntity, OpMetadataUpdated}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import no.sysco.middleware.kafka.steward.metadata.EntityManager.{ DeleteEntity, OpMetadataUpdated }
 import no.sysco.middleware.kafka.steward.metadata.model._
-import no.sysco.middleware.kafka.steward.proto.collector.{BrokerEvent, ClusterEvent, CollectorEvent, TopicEvent}
+import no.sysco.middleware.kafka.steward.proto.collector.{ BrokerEvent, ClusterEvent, CollectorEvent, TopicEvent }
 
 object CollectorManager {
 
@@ -34,7 +34,7 @@ class CollectorManager(entityManager: ActorRef) extends Actor with ActorLogging 
         val map = Map("host" -> node.host, "port" -> node.port.toString)
         val metadata = map ++ config.entries
         entityManager ! OpMetadataUpdated(brokerEntity, OpMetadata(metadata))
-      case event if event.brokerUpdated =>
+      case event if event.isBrokerUpdated =>
         val brokerUpdated = event.brokerUpdated.get
         val node = brokerUpdated.node.get
         val config = brokerUpdated.config.get

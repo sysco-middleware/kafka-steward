@@ -1,7 +1,7 @@
 package no.sysco.middleware.kafka.steward.metadata.http
 
 import akka.actor.ActorRef
-import akka.http.scaladsl.server.{Directives, Route}
+import akka.http.scaladsl.server.{ Directives, Route }
 
 class HttpMetadataService(metadataManager: ActorRef) extends Directives {
   val route: Route = path("entities") {
@@ -15,7 +15,7 @@ class HttpMetadataService(metadataManager: ActorRef) extends Directives {
           complete("")
         }
       }
-      // ops by id
+    // ops by id
   }
 
 }

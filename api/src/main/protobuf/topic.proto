@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package kafka.steward.collector.topic.proto;
+
+option java_package = "no.sysco.middleware.kafka.steward.collector.proto";
+option java_multiple_files = true;
+
+message TopicKey {
+    string clusterId = 1;
+    string name = 2;
+}
+
+message TopicValue {
+    oneof event {
+        TopicCreated topicCreated = 1;
+        TopicUpdated topicUpdated = 2;
+        TopicDeleted topicDeleted = 3;
+    }
+}
+
+message TopicCreated {
+}
+
+message TopicUpdated {
+    repeated Partition partitions = 1;
+    Config config = 2;
+    bool internal = 3;
+}
+
+message TopicDeleted {
+}
+
+message Partition {
+    int32 id = 1;
+    repeated Replica replicas = 2;
+}
+
+message Replica {
+    int32 id = 1;
+}
+
+message Config {
+    map<string, string> entries = 1;
+}

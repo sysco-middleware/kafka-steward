@@ -2,7 +2,7 @@ package no.sysco.middleware.kafka.steward.collector
 
 import java.time.Duration
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
@@ -11,13 +11,13 @@ import io.opencensus.scala.stats.Measurement
 import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository
 import no.sysco.middleware.kafka.steward.collector.internal.Parser._
 import no.sysco.middleware.kafka.steward.collector.model._
-import no.sysco.middleware.kafka.steward.proto.collector.{TopicCreated, TopicDeleted, TopicEvent}
+import no.sysco.middleware.kafka.steward.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent }
 
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 object TopicManager {
   def props(

@@ -6,9 +6,10 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import net.manub.embeddedkafka.EmbeddedKafkaConfig
+import no.sysco.middleware.kafka.steward.collector.TopicManager
+import no.sysco.middleware.kafka.steward.collector.TopicManager.ListTopics
 import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository.{ CollectTopics, DescribeConfig, DescribeTopic, ResourceType }
 import no.sysco.middleware.kafka.steward.collector.model._
-import no.sysco.middleware.kafka.steward.collector.topic.TopicManager.ListTopics
 import no.sysco.middleware.kafka.steward.proto
 import no.sysco.middleware.kafka.steward.proto.collector.{ TopicCreated, TopicDeleted, TopicEvent, TopicUpdated }
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }

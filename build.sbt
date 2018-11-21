@@ -7,7 +7,7 @@ lazy val buildSettings = Seq(
 )
 
 lazy val root = (project in file("."))
-  .aggregate(api, collector)
+  .aggregate(api, collector, collectorTopic)
   .settings(
     name := "kafka-steward",
     buildSettings
@@ -21,6 +21,31 @@ lazy val api = (project in file("api"))
     buildSettings,
     PB.targets in Compile := Seq(
       scalapb.gen() -> (sourceManaged in Compile).value
+    )
+  )
+lazy val collectorTopic = (project in file("collector-topic"))
+  .dependsOn(api)
+  .settings(
+    name := "kafka-steward-collector-topic",
+    buildSettings,
+    libraryDependencies ++= Seq(
+      akkaStreams,
+      alpakkaKafka,
+      kafkaClients,
+
+      akkaHttp,
+      akkaHttpSpray,
+
+      akkaSlf4j,
+      logback,
+
+      opencensus,
+      opencensusExporterPrometheus,
+      prometheusClientHttpServer,
+
+      scalaTest,
+      akkaTestKit,
+      scalaTestEmbeddedKafka
     )
   )
 

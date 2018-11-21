@@ -2,13 +2,14 @@ package no.sysco.middleware.kafka.steward.collector
 
 import java.time.Duration
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import io.opencensus.scala.Stats
 import io.opencensus.scala.stats.Measurement
+import no.sysco.middleware.kafka.steward.collector.BrokerManager.ListBrokers
 import no.sysco.middleware.kafka.steward.collector.internal.Parser._
-import no.sysco.middleware.kafka.steward.collector.model.{Cluster, ClusterDescribed, NodesDescribed}
+import no.sysco.middleware.kafka.steward.collector.model.{ Cluster, ClusterDescribed, NodesDescribed }
 import no.sysco.middleware.kafka.steward.proto.collector
-import no.sysco.middleware.kafka.steward.proto.collector.{BrokerEvent, ClusterCreated, ClusterEvent, ClusterUpdated}
+import no.sysco.middleware.kafka.steward.proto.collector.{ BrokerEvent, ClusterCreated, ClusterEvent, ClusterUpdated }
 
 import scala.concurrent.ExecutionContext
 

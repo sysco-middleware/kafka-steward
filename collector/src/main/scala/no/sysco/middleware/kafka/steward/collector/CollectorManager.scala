@@ -1,12 +1,12 @@
 package no.sysco.middleware.kafka.steward.collector
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import no.sysco.middleware.kafka.steward.collector.BrokerManager.ListBrokers
 import no.sysco.middleware.kafka.steward.collector.ClusterManager.GetCluster
 import no.sysco.middleware.kafka.steward.collector.TopicManager.ListTopics
-import no.sysco.middleware.kafka.steward.collector.internal.{CollectorEventConsumer, CollectorEventProducer, OriginRepository}
+import no.sysco.middleware.kafka.steward.collector.internal.{ CollectorEventConsumer, CollectorEventProducer, OriginRepository }
 import no.sysco.middleware.kafka.steward.proto.collector.CollectorEvent
 
 import scala.concurrent.ExecutionContext

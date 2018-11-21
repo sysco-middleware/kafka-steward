@@ -2,7 +2,6 @@ package no.sysco.middleware.kafka.steward.graph.model
 
 import no.sysco.middleware.kafka.steward.graph.model.entities.NodeType.NodeType
 
-
 object entities {
 
   object NodeType extends Enumeration {

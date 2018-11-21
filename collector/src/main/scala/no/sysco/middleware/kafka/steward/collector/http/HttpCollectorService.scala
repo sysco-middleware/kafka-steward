@@ -5,10 +5,10 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server.{ Directives, Route }
 import akka.pattern.ask
 import akka.util.Timeout
-import no.sysco.middleware.kafka.steward.collector.cluster.ClusterManager.GetCluster
-import no.sysco.middleware.kafka.steward.collector.cluster.BrokerManager.ListBrokers
+import no.sysco.middleware.kafka.steward.collector.BrokerManager.ListBrokers
+import no.sysco.middleware.kafka.steward.collector.ClusterManager.GetCluster
+import no.sysco.middleware.kafka.steward.collector.TopicManager.ListTopics
 import no.sysco.middleware.kafka.steward.collector.model._
-import no.sysco.middleware.kafka.steward.collector.topic.TopicManager.ListTopics
 import spray.json._
 
 import scala.concurrent.duration._

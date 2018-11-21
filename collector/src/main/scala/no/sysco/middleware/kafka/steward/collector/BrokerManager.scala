@@ -1,6 +1,6 @@
 package no.sysco.middleware.kafka.steward.collector
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.pattern.ask
 import akka.util.Timeout
 import io.opencensus.scala.Stats
@@ -9,12 +9,12 @@ import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository
 import no.sysco.middleware.kafka.steward.collector.internal.OriginRepository.DescribeConfig
 import no.sysco.middleware.kafka.steward.collector.internal.Parser._
 import no.sysco.middleware.kafka.steward.collector.model._
-import no.sysco.middleware.kafka.steward.proto.collector.{BrokerCreated, BrokerEvent, BrokerUpdated}
+import no.sysco.middleware.kafka.steward.proto.collector.{ BrokerCreated, BrokerEvent, BrokerUpdated }
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 object BrokerManager {
   def props(
