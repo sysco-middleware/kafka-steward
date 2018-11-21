@@ -6,12 +6,12 @@ import no.sysco.middleware.kafka.steward.collector.proto.topic._
 import no.sysco.middleware.kafka.steward.collector.topic.core.model.{ TopicCreated, TopicDeleted, TopicUpdated }
 import org.apache.kafka.clients.producer.{ Callback, Producer, ProducerRecord }
 
-object TopicRepository {
+object OriginRepository {
   def props(producer: Producer[Array[Byte], Array[Byte]], topic: String): Props =
-    Props(new TopicRepository(producer, topic))
+    Props(new OriginRepository(producer, topic))
 }
 
-class TopicRepository(producer: Producer[Array[Byte], Array[Byte]], topic: String)
+class OriginRepository(producer: Producer[Array[Byte], Array[Byte]], topic: String)
   extends Actor with ActorLogging {
   override def receive: Receive = {
     case topicCreated: TopicCreated => handleTopicCreated(topicCreated)

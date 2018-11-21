@@ -2,7 +2,7 @@ import sbt._
 
 object Versions {
   val kafka           = "1.0.0"
-  val akkaStreams = "2.5.18"
+  val akkaStreams = "2.5.17"
   val akkaHttp = "10.1.5"
   val alpakkaKafka = "0.22"
 
